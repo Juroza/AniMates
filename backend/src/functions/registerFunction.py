@@ -2,9 +2,6 @@
 from azure.cosmos import CosmosClient
 import os
 import azure.functions as func
-MyCosmos = CosmosClient.from_connection_string(os.environ['AzureCosmosDBConnectionString'])
-AniMatesDBProxy = MyCosmos.get_database_client(os.environ['DatabaseName'])
-UserContainerProxy = AniMatesDBProxy.get_container_client(os.environ['UserContainerName'])
 from src.domains.User import User
 from src.infrastructure.CosmosUserRepository import CosmosUserRepository
 from src.usecases.RegisterUseCases import RegisterUseCase,AlreadyExists
@@ -14,6 +11,9 @@ bp= func.Blueprint()
 
 @bp.route("register",auth_level=func.AuthLevel.ANONYMOUS,methods=["POST"])
 def registerUser(req: func.HttpRequest)->func.HttpResponse:
+    MyCosmos = CosmosClient.from_connection_string(os.environ['AzureCosmosDBConnectionString'])
+    AniMatesDBProxy = MyCosmos.get_database_client(os.environ['DatabaseName'])
+    UserContainerProxy = AniMatesDBProxy.get_container_client(os.environ['UserContainerName'])
     logging.info(f"GOT{req}")
     try:
         user_data=req.get_json()

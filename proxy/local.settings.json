@@ -1,0 +1,12 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "AzureWebJobsStorage": "",
+    "AzureCosmosDBConnectionString": "AccountEndpoint=https://jys1g23-cosmos-db.documents.azure.com:443/;AccountKey=SpoySlulXwLHEEq7p8RFYVgaDQggiHlaDZe2ZAkiUR9PppyqAQeRcaCCHFiftlOMblpEOUcbR4yrACDb0bFhdQ==;",
+    "DatabaseName": "AniMates",
+    "UserContainerName": "users",
+    "ResourceLocation": "francecentral",
+    "FunctionAppKey": "OgGh0em3Hl6ZuiNqpime0rx4Wv2WI3V-Rw8jhRHykkTOAzFuNR7n2g=="
+  }
+}
