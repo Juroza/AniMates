@@ -55,33 +55,33 @@ jobs:
             !venv/
 
   deploy:
-  runs-on: ubuntu-latest
-  needs: build
-  permissions:
-    id-token: write
-    contents: read
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      id-token: write
+      contents: read
 
-  steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Setup Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: "3.11"
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
-    - name: Login to Azure
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_11CC55A902604D399AF29065317147FD }}
-        tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3C7F9767AE1B4D85A35E22356B0AA33F }}
-        subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_10F47302F1CC4E02B76A5AD84F78A9BF }}
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_11CC55A902604D399AF29065317147FD }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_3C7F9767AE1B4D85A35E22356B0AA33F }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_10F47302F1CC4E02B76A5AD84F78A9BF }}
 
-    - name: Install Azure Functions Core Tools
-      run: |
-        npm install -g azure-functions-core-tools@4 --unsafe-perm true
+      - name: Install Azure Functions Core Tools
+        run: |
+          npm install -g azure-functions-core-tools@4 --unsafe-perm true
 
-    - name: Publish Azure Function App
-      run: |
-        cd backend
-        func azure functionapp publish AniMatesFunctions
+      - name: Publish Azure Function App
+        run: |
+          cd backend
+          func azure functionapp publish AniMatesFunctions
