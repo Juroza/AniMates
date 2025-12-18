@@ -66,3 +66,10 @@ jobs:
           app-name: "AniMates"
           slot-name: "Production"
           package: .
+      - name: Install Azure Functions Core Tools
+        run: |
+          npm install -g azure-functions-core-tools@4 --unsafe-perm true
+
+      - name: Publish Azure Function App
+        run: |
+          func azure functionapp publish AniMatesFunctions
