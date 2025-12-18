@@ -80,6 +80,12 @@ jobs:
       - name: Install Azure Functions Core Tools
         run: |
           npm install -g azure-functions-core-tools@4 --unsafe-perm true
+      - name: Ensure run-from-package is disabled
+        run: |
+          az functionapp config appsettings delete \
+            --name AniMatesFunctions \
+            --resource-group animates_group \
+            --setting-names WEBSITE_RUN_FROM_PACKAGE WEBSITE_USE_ZIP || true
 
       - name: Publish Azure Function App
         run: |
