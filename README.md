@@ -9,62 +9,77 @@ This template should help get you started developing with Vue 3 in Vite.
 ## Recommended Browser Setup
 
 - Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd) 
+  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
   - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
 - Firefox:
   - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
   - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
 
-## Type Support for `.vue` Imports in TS
+### General Development Workflow
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+#### When working on Frontend
 
-## Customize configuration
+##### Start Express Server
 
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+The thing that starts the sockets and what not, need this started to call backend from frontend buttons and things
 
 ```sh
-npm install
+npm start
 ```
 
-### Compile and Hot-Reload for Development
+For local backend to work ur gonna need to also run
 
 ```sh
+cd backend
+func start
+```
+
+##### Start Frontend Environment
+
+```sh
+cd frontend
+npm install
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+### When working on Backend
 
 ```sh
-npm run build
+cd backend
+pip install -r requirements.txt
+func start
 ```
 
-### Run Unit Tests with [Vitest](https://vitest.dev/)
+## When your finished with what ur working on
+
+### Best Practice
+
+Any git push to main branch will automatically reflect on the [published site](https://animates-fkaudbd3ejhmcwdp.francecentral-01.azurewebsites.net/). Its probably best to have at least someone else check it first
+
+#### Best Practice
 
 ```sh
-npm run test:unit
+git pull
+git checkout -b [your_feature]
 ```
 
-### Run End-to-End Tests with [Playwright](https://playwright.dev)
+When done
 
 ```sh
-# Install browsers for the first run
-npx playwright install
-
-# When testing on CI, must build the project first
-npm run build
-
-# Runs the end-to-end tests
-npm run test:e2e
-# Runs the tests only on Chromium
-npm run test:e2e -- --project=chromium
-# Runs the tests of a specific file
-npm run test:e2e -- tests/example.spec.ts
-# Runs the tests in debug mode
-npm run test:e2e -- --debug
+git add .
+git commit
+git push
 ```
+
+#### If cba just
+
+```sh
+git add .
+git commit
+git push
+```
+
+directly on the main branch
 
 ### Lint with [ESLint](https://eslint.org/)
 

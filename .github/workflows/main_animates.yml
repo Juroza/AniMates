@@ -66,3 +66,31 @@ jobs:
           app-name: "AniMates"
           slot-name: "Production"
           package: .
+  deploy_functions:
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout GitHub Action"
+        uses: actions/checkout@v4
+
+      - name: "Setup Python"
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: "Install dependencies"
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_59634EFCB46A44E7B3ED196B5D3D170F }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B722DE35A04C4F378885B98786B23584 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_DB385C1EBB4D4E7397C9570D2DB5F75A }}
+
+      - name: "Run Azure Functions Action"
+        uses: Azure/functions-action@v1
+        with:
+          app-name: "AniMatesFunctions"
+          package: "backend"

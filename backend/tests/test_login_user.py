@@ -28,4 +28,8 @@ class TestLoginUser(unittest.TestCase):
         response= requests.post(self.TEST_URL,json=inputUserRight.to_dict())
         self.assertEqual(200,response.status_code)
         self.assertEqual(response.json(),{"result" :True, "msg": "OK" })
+        inputUserWrong=User(id=None,username="apofjpaj",password="salty111")
+        response= requests.post(self.TEST_URL,json=inputUserWrong.to_dict())
+        self.assertEqual(200,response.status_code)
+        self.assertEqual(response.json(),{"result" :False, "msg": "Username or password was incorrect" })
        

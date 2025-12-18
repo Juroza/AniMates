@@ -13,13 +13,11 @@ class LoginUserUseCase():
         self.userRepository=userRepository
     def execute(self,user:User)->bool:
         read_user= self.userRepository.getUser(user)
-        print("fuck")
-        print(read_user.password)
-        print(user.password)
-        if(user.password==read_user.password):
-            return True
-        else:
-        
+        if(read_user==None):
             raise InvalidLogin("Username or password was incorrect")
+        
+        if(user.password!=read_user.password):
+            raise InvalidLogin("Username or password was incorrect")
+        return True
 
 
