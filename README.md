@@ -81,6 +81,82 @@ git push
 
 directly on the main branch
 
+## Atomic Design for Frontend
+
+[This explains well](https://atomicdesign.bradfrost.com/chapter-2/)
+
+Basically
+
+- in atoms put small things like new buttons or fields, reusable stuff
+- in molecules put things that use atoms, use multiple things or something
+- in organims, put things that uses molecules
+
+In views just put the whole screen logic
+
+Look in router/index.ts, here for each screen you can define the route/url for it
+
+```sh
+
+  routes: [
+    { path: '/newScreen', component: newScreenView }
+  ],
+
+```
+
+transition to the new screen using
+
+```sh
+route.push('/newScreen')
+```
+
+## Backend Design
+
+Tried to follow Domain Driven Design but not sure if I did it correctly...
+
+### server.js
+
+This is in proxy, same as part 2 I think? If you need sockets put here. If you need to call a new azure function put it here
+
+```sh
+app.post("/doSomethingIDK", async (req, res) => {
+  blah blah.....
+  const apiRes = await axios.post(
+      `${BACKEND_ENDPOINT}/doSomethingIDK`,
+      { sendthis, andthis },
+      { headers: { "Content-Type": "application/json" } }
+    );
+})
+```
+
+### Domains
+
+In this folder define concepts, like user, class
+
+### Repositories
+
+If you make a new container, make a new repository for it, declare what abstract function will be needed
+
+### Infrastructure
+
+Here you will actually implement the abstract functions you declared in /repositories. (why the abstractions are needed? idk man change if you want, prob good for testing??)
+
+### UseCases
+
+Here you will call the functions you wrote in the repositories. But can add logic/rules here, raise what you need. create an execute function
+
+### functions
+
+I thought having all the functions in one file, in the function_app.py would start to get confusing and messy. Here you can define one file per function. Same as what we were doing in part 1
+
+Make sure to register the function in function_app.py tho
+
+```sh
+from src.functions.doingSomething Function import bp as doingSomethingFunction
+
+app.register_blueprint(doingSomethingFunction)
+
+```
+
 ### Lint with [ESLint](https://eslint.org/)
 
 ```sh
