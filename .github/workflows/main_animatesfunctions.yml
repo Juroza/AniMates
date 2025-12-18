@@ -84,4 +84,4 @@ jobs:
       - name: Publish Azure Function App
         run: |
           cd backend
-          func azure functionapp publish AniMatesFunctions
+          func azure functionapp publish AniMatesFunctions --python
