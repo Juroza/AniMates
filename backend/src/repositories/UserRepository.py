@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import List
 from src.domains.User import User
 class UserRepository(ABC):
     @abstractmethod
@@ -12,4 +13,7 @@ class UserRepository(ABC):
         pass
     @abstractmethod
     def deleteUser(self,user:User)->bool:
+        pass
+    @abstractmethod
+    def getAllUsers(self)->List[User]|None:
         pass

@@ -6,7 +6,7 @@ export type Project = {
   name: string
   ownerName: string
   private: boolean
-  users: [string]
+  users: string[]
   width: number
   height: number
   fps: number
@@ -21,6 +21,10 @@ export type User = {
   myProjects: Project[] | undefined
   collabProjects: Project[] | undefined
   id: string | undefined
+}
+export interface getAllUsersResponse {
+  id: string
+  username: string
 }
 export interface getUsersProjectsResponse {
   'my-projects': Project[]
@@ -44,7 +48,11 @@ socket.on('connect', () => {
   state.connected = true
 })
 export function setClientUser(user: User) {
-  state.clientUser = user
+  if (state.clientUser) {
+    Object.assign(state.clientUser, user)
+  } else {
+    state.clientUser = user
+  }
 }
 export function useSocket() {
   // Component-level lifecycle (optional)

@@ -74,20 +74,24 @@ class CosmosProjectRepository(ProjectRepository):
             collabProjects.append(project)
         return [myProjects,collabProjects]
     def updateProjectSettings(self, project):
+        print("a2")
         readProject=self.container.read_item(item=project.id,partition_key=project.id)
         if(readProject["name"]==None):
+            print("a1")
             return False
         userRep=[]
         for user in project.users:
             userRep.append(user)
-
+        print("a3")
+        print(project.projectName)
         readProject["users"]=userRep
         readProject['fps']= project.FPS
         readProject['owner']= project.owner
-        readProject["name"]=project.projectName
+        readProject['name']=project.projectName
         readProject['private']=project.private
         readProject['width']=project.width
         readProject['height']=project.height
         self.container.replace_item(readProject["id"],readProject)
-        return super().updateProjectSettings(project)
+        print("a4")
+        return True
     

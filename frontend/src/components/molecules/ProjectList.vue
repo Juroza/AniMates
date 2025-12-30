@@ -1,6 +1,7 @@
 <template>
   <v-col>
     <h3>{{ props.title }}</h3>
+    <v-divider :thickness="7"></v-divider>
     <v-list>
       <v-list-item
         color="primary"

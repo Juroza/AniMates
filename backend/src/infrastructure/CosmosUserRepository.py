@@ -1,3 +1,4 @@
+from typing import List
 from azure.cosmos import ContainerProxy
 from src.repositories.UserRepository import UserRepository
 from src.domains.User import User
@@ -39,3 +40,15 @@ class CosmosUserRepository(UserRepository):
         for r in results:
             self.container.delete_item(r["id"], r["id"])
         return True
+    def getAllUsers(self):
+        query_result = list(self.container.query_items(
+        query=f"SELECT * FROM c ",
+        enable_cross_partition_query=True
+        ))
+        if(len(query_result)==0):
+            return None
+        users:List[User]=[]
+        for user_data in query_result:
+            user= User(user_data["id"],user_data["username"],user_data["password"])
+            users.append(user)
+        return users

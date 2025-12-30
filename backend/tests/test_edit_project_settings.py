@@ -9,12 +9,10 @@ from src.domains.User import User
 from src.domains.Project import Project
 from src.infrastructure.CosmosUserRepository import CosmosUserRepository
 from src.infrastructure.CosmosProjectRepository import CosmosProjectRepository
-def without_id(d):
-    return {k: v for k, v in d.items() if k != "id"}
 
 class TestProject(unittest.TestCase):
-    LOCAL_DEV_URL="http://localhost:7071/get-users-project"  
     LOCAL_DEV_Create_URL="http://localhost:7071/create-new-project"  
+    LOCAL_DEV_URL="http://localhost:7071/edit-project"  
     TEST_URL = LOCAL_DEV_URL
     with open('backend/local.settings.json') as settings_file:
         settings = json.load(settings_file)
@@ -26,9 +24,8 @@ class TestProject(unittest.TestCase):
     projectRepository= CosmosProjectRepository(ProjectContainerProxy)
     def test__nbean(self):
         print(self.settings['Values']['AzureCosmosDBConnectionString'])
-    def test_valid_create_new_project(self):
-        self.maxDiff=None
-        owner=User(id=None,username="Vera",password="wine")
+    def test_valid_edit_project(self):
+        owner=User(id=None,username="MyMy",password="Japsterdam")
         self.userRepository.deleteUser(owner)
         self.userRepository.registerUser(owner)
         member1=User(id=None,username="Coco",password="massaStudio")
@@ -39,33 +36,34 @@ class TestProject(unittest.TestCase):
         self.userRepository.registerUser(member2)
 
         
-        project= Project("Future Of Belgium",owner.username,True,[member1.username,member2.username])
+        project= Project("History Of Belgium",owner.username,True,[member1.username,member2.username])
         self.projectRepository.deleteProject(project)
         currentDateTime=datetime.datetime.now()
         project.setCreationDate(currentDateTime)
+        
         response= requests.post(self.LOCAL_DEV_Create_URL,json=project.to_dict())
         self.assertEqual(200,response.status_code)
-        projectColab= Project("Present Of Belgium",member1.username,True,[owner.username,member2.username])
-        self.projectRepository.deleteProject(projectColab)
-        currentDateTime=datetime.datetime.now()
-        projectColab.setCreationDate(currentDateTime)
-        response= requests.post(self.LOCAL_DEV_Create_URL,json=projectColab.to_dict())
-        self.assertEqual(200,response.status_code)
-
-        response= requests.post(self.TEST_URL,json={'name':owner.username})
-        self.assertEqual(200,response.status_code)
-        print(response.json())
+        print(response.text)
+        query_result = list(self.ProjectContainerProxy.query_items(
+    query=f"SELECT * FROM c WHERE c.name='{project.projectName}'",
+    enable_cross_partition_query=True
+))
+        result=query_result[0]
+        self.assertEqual(result['name'],project.projectName)
+        self.assertEqual(result['owner'],owner.username)
+        self.assertEqual(result['users'],[member1.username,member2.username])
+        self.assertEqual(result['datetime_created'],currentDateTime.isoformat())
+        project.setPrivate(False)
+        project.setProjectName("Shistory of Unova")
+        project.setID(result['id'])
+        print(project.projectName)
         print(project.to_dict())
-        print(projectColab.to_dict())
-        actual = response.json()
-
-        normalized_actual = {
-            "my-projects": [without_id(p) for p in actual["my-projects"]],
-            "collab-projects": [without_id(p) for p in actual["collab-projects"]],
-        }
-        expected = {
-            "my-projects": [without_id(project.to_dict())],
-            "collab-projects": [without_id(projectColab.to_dict())],
-        }
-
-        self.assertEqual(normalized_actual, expected)
+        response= requests.post(self.LOCAL_DEV_URL,json={'project':project.to_dict(),'id':project.id})
+        query_result = list(self.ProjectContainerProxy.query_items(
+    query=f"SELECT * FROM c WHERE c.id='{project.id}'",
+    enable_cross_partition_query=True
+))
+        result=query_result[0]
+        self.assertEqual(result['name'],"Shistory of Unova")
+        self.assertEqual(result['private'],False)
+   

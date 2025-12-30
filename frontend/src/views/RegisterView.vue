@@ -19,7 +19,11 @@ import { ref } from 'vue'
 
 import RegisterInput from '../components/molecules/RegisterInput.vue'
 import axios from 'axios'
-import { BACKEND_ENDPOINT } from '../stores/socketState'
+import {
+  BACKEND_ENDPOINT,
+  setClientUser,
+  type getUsersProjectsResponse,
+} from '../stores/socketState'
 import router from '../router'
 
 const username = ref('')
@@ -39,6 +43,20 @@ async function handleRegister() {
       console.log('rong')
     } else {
       error.value = false
+      const getUsersresponse = await axios.post<getUsersProjectsResponse>(
+        BACKEND_ENDPOINT + '/get-users-project',
+        {
+          username: username.value,
+        },
+      )
+      console.log(getUsersresponse.data)
+      setClientUser({
+        id: undefined,
+        username: username.value,
+        password: password.value,
+        myProjects: getUsersresponse.data['my-projects'],
+        collabProjects: getUsersresponse.data['collab-projects'],
+      })
       router.push('home')
     }
     console.log('Register response:', response.data)
