@@ -66,6 +66,31 @@ app.post("/login", async (req, res) => {
   }
 });
 
+app.post("/get-users-project", async (req, res) => {
+  try {
+    console.log("Received login request in Express proxy");
+    const { username } = req.body;
+
+    const apiRes = await axios.post(
+      `${BACKEND_ENDPOINT}/get-users-project`,
+      { name: username },
+      { headers: { "Content-Type": "application/json" } }
+    );
+
+    res.status(apiRes.status).json(apiRes.data);
+  } catch (error) {
+    console.error("Error calling backend /login:");
+    if (error.response) {
+      res.status(error.response.status).json(error.response.data);
+    } else {
+      console.error(error.message);
+      res
+        .status(500)
+        .json({ result: false, msg: "Backend service unreachable" });
+    }
+  }
+});
+
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 app.use((req, res) => {

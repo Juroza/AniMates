@@ -2,10 +2,29 @@ import { reactive, onMounted, onUnmounted } from 'vue'
 import { io } from 'socket.io-client'
 import router from '../router'
 import { fa } from 'vuetify/locale'
-type User = {
+export type Project = {
+  name: string
+  ownerName: string
+  private: boolean
+  users: [string]
+  width: number
+  height: number
+  fps: number
+  datetime_created: string
+  datetime_modified: string
+  frameCount: number
+  id: string
+}
+export type User = {
   username: string
   password: string
+  myProjects: Project[] | undefined
+  collabProjects: Project[] | undefined
   id: string | undefined
+}
+export interface getUsersProjectsResponse {
+  'my-projects': Project[]
+  'collab-projects': Project[]
 }
 type clientStateData = {
   connected: boolean
@@ -24,6 +43,9 @@ const socket = io(URL, {
 socket.on('connect', () => {
   state.connected = true
 })
+export function setClientUser(user: User) {
+  state.clientUser = user
+}
 export function useSocket() {
   // Component-level lifecycle (optional)
   onMounted(() => {

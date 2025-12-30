@@ -61,6 +61,7 @@ class CosmosProjectRepository(ProjectRepository):
         myProjects=[]
         for readProj in query_result:
             project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"])
+            project.setID(readProj['id'])
             myProjects.append(project)
         query_collab_result = list(self.container.query_items(
         query=f"SELECT * FROM c WHERE ARRAY_CONTAINS(c.users,'{name}') AND c.owner!='{name}'",
@@ -69,6 +70,7 @@ class CosmosProjectRepository(ProjectRepository):
         collabProjects=[]
         for readProj in query_collab_result:
             project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"])
+            project.setID(readProj['id'])
             collabProjects.append(project)
         return [myProjects,collabProjects]
     def updateProjectSettings(self, project):
