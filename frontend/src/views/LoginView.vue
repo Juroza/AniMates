@@ -20,7 +20,7 @@ import LoginInput from '../components/molecules/LoginInput.vue'
 import axios from 'axios'
 import { BACKEND_ENDPOINT } from '../stores/socketState'
 import router from '../router'
-import { useSocket, setClientUser, User, getUsersProjectsResponse } from '../stores/socketState'
+import { setClientUser, type getUsersProjectsResponse } from '../stores/socketState'
 
 const username = ref('')
 const password = ref('')
