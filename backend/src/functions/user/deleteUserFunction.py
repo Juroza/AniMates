@@ -4,7 +4,7 @@ import os
 import azure.functions as func
 from src.domains.User import User
 from src.infrastructure.CosmosUserRepository import CosmosUserRepository
-from src.usecases.DeleteUserUseCase import DeleteUserUseCase,InvalidUser
+from src.usecases.user.DeleteUserUseCase import DeleteUserUseCase,InvalidUser
 import json
 import logging
 bp= func.Blueprint()

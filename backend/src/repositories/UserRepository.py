@@ -8,5 +8,8 @@ class UserRepository(ABC):
     def getUser(self,user:User)->User|None:
         pass
     @abstractmethod
+    def getUserByName(self,user:User)->User|None:
+        pass
+    @abstractmethod
     def deleteUser(self,user:User)->bool:
         pass

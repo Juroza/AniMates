@@ -17,7 +17,7 @@ class TestRegisterUser(unittest.TestCase):
     UserContainerProxy = UsersDBProxy.get_container_client(settings['Values']['UserContainerName'])
     userRepository= CosmosUserRepository(UserContainerProxy)
     def test_valid_register_player(self):
-        user=User(id=None,username="Reigen",password="saltysplashy")
+        user=User(id=None,username="Brain may",password="saltysplashy")
         self.userRepository.deleteUser(user)
         print("yooooo")
         print(user.id)

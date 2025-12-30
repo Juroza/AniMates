@@ -2,8 +2,8 @@
 from dataclasses import dataclass
 import json
 from typing import List
-from Project import Project
-from Stroke import Stroke
+from .Project import Project
+from .Stroke import Stroke
 @dataclass
 class Frame:
     def __init__(self,project:Project,frameNumber:int,strokeRecord:List[Stroke]|None):

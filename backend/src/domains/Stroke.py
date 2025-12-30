@@ -7,6 +7,8 @@ class Point:
     def __init__(self,x:float,y:float):
         self.x=x
         self.y=y
+    def to_dict(self):
+        return {"x":self.x,"y":self.y}
 @dataclass
 class Segment:
     def __init__(self,point:Point,time:int,presure:float):
@@ -14,7 +16,7 @@ class Segment:
         self.time=time
         self.pressure=presure
     def to_dict(self):
-        return {"point":self.point, "time":  self.time , "pressure" :self.pressure}
+        return {"point":self.point.to_dict(), "time":  self.time , "pressure" :self.pressure}
 
 @dataclass
 class Stroke:

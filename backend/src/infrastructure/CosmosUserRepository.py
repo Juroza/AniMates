@@ -19,6 +19,16 @@ class CosmosUserRepository(UserRepository):
         user_data= query_result[0]
         user= User(user_data["id"],user_data["username"],user_data["password"])
         return user
+    def getUserByName(self,username:str):
+        query_result = list(self.container.query_items(
+        query=f"SELECT * FROM c WHERE c.username='{username}'",
+        enable_cross_partition_query=True
+        ))
+        if(len(query_result)==0):
+            return None
+        user_data= query_result[0]
+        user= User(user_data["id"],user_data["username"],user_data["password"])
+        return user
     def deleteUser(self, user):
         results = list(self.container.query_items(
         query=f"SELECT * FROM c WHERE c.username='{user.username}'",
