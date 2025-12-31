@@ -61,7 +61,6 @@ class CosmosProjectRepository(ProjectRepository):
         myProjects=[]
         for readProj in query_result:
             project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"])
-            project.setID(readProj['id'])
             myProjects.append(project)
         query_collab_result = list(self.container.query_items(
         query=f"SELECT * FROM c WHERE ARRAY_CONTAINS(c.users,'{name}') AND c.owner!='{name}'",
@@ -70,28 +69,23 @@ class CosmosProjectRepository(ProjectRepository):
         collabProjects=[]
         for readProj in query_collab_result:
             project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"])
-            project.setID(readProj['id'])
             collabProjects.append(project)
         return [myProjects,collabProjects]
     def updateProjectSettings(self, project):
-        print("a2")
         readProject=self.container.read_item(item=project.id,partition_key=project.id)
         if(readProject["name"]==None):
-            print("a1")
             return False
         userRep=[]
         for user in project.users:
             userRep.append(user)
-        print("a3")
-        print(project.projectName)
+
         readProject["users"]=userRep
         readProject['fps']= project.FPS
         readProject['owner']= project.owner
-        readProject['name']=project.projectName
+        readProject["name"]=project.projectName
         readProject['private']=project.private
         readProject['width']=project.width
         readProject['height']=project.height
         self.container.replace_item(readProject["id"],readProject)
-        print("a4")
-        return True
+        return super().updateProjectSettings(project)
     

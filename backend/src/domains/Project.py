@@ -27,16 +27,6 @@ class Project:
         self.dateCreated=creationDate
     def setLatestUpdateTime(self,updateTime:datetime):
         self.latestUpdateTime=updateTime
-    def setProjectName(self,name:str):
-        self.projectName=name
-    def setFPS(self,fps:int):
-        self.FPS=fps
-    def setWidth(self,width:int):
-        self.width=width
-    def setHeight(self,height:int):
-        self.height=height
-    def setPrivate(self,priv:bool):
-        self.private=priv
     def to_dict(self):
-        return {"id":self.id,"name":self.projectName,"owner":self.owner,"private":self.private,"users":self.users,"width":self.width,"height":self.height,"fps":self.FPS,"datetime_created":self.dateCreated.isoformat(),"datetime_modified":self.latestUpdateTime.isoformat(),"frameCount":self.frameCount}
+        return {"name":self.projectName,"owner":self.owner,"private":self.private,"users":self.users,"width":self.width,"height":self.height,"fps":self.FPS,"datetime_created":self.dateCreated.isoformat(),"datetime_modified":self.latestUpdateTime.isoformat(),"frameCount":self.frameCount}
 

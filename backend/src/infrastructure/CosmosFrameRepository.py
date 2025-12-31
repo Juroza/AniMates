@@ -14,7 +14,7 @@ class CosmosFrameRepository(FrameRepository):
         
     def loadFrame(self, project, frameNumber):
         query_result = list(self.container.query_items(
-        query=f"SELECT * FROM c WHERE c.name='{project.name}'",
+        query=f"SELECT * FROM c WHERE c.name='{project.projectName}'",
         enable_cross_partition_query=True
         ))
         if(len(query_result)==0):

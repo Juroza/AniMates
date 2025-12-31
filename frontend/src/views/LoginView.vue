@@ -20,7 +20,6 @@ import LoginInput from '../components/molecules/LoginInput.vue'
 import axios from 'axios'
 import { BACKEND_ENDPOINT } from '../stores/socketState'
 import router from '../router'
-import { setClientUser, type getUsersProjectsResponse } from '../stores/socketState'
 
 const username = ref('')
 const password = ref('')
@@ -39,20 +38,6 @@ async function handleLogin() {
       console.log('rong')
     } else {
       error.value = false
-      const getUsersresponse = await axios.post<getUsersProjectsResponse>(
-        BACKEND_ENDPOINT + '/get-users-project',
-        {
-          username: username.value,
-        },
-      )
-      console.log(getUsersresponse.data)
-      setClientUser({
-        id: undefined,
-        username: username.value,
-        password: password.value,
-        myProjects: getUsersresponse.data['my-projects'],
-        collabProjects: getUsersresponse.data['collab-projects'],
-      })
       router.push('home')
     }
     console.log('Register response:', response.data)
