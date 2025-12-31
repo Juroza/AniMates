@@ -30,7 +30,13 @@
 
           Edit Project
         </v-btn>
-        <v-btn class="anim-button" size="xx-large" variant="text">
+        <v-btn
+          :disabled="selectedProject == ''"
+          class="anim-button"
+          size="xx-large"
+          variant="text"
+          @click="router.push({ name: 'timeline' })"
+        >
           <v-icon icon="$pencil" />
 
           [AniMate!]
@@ -87,12 +93,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import ProjectList from '../components/molecules/ProjectList.vue'
 import { BACKEND_ENDPOINT, useSocket, type getAllUsersResponse } from '../stores/socketState'
 import DeleteProjectDialog from '../components/molecules/DeleteProjectDialog.vue'
 import axios from 'axios'
 import NewProjectDialog from '../components/molecules/NewProjectDialog.vue'
+import router from '../router'
 
 const { state } = useSocket()
 const selectedProject = ref('')
@@ -109,6 +116,13 @@ const selectedProjectFull = computed(() => {
   }
   return a[0]
 })
+watch(
+  selectedProjectFull,
+  (newProject) => {
+    state.currentProject = newProject ?? undefined
+  },
+  { immediate: true },
+)
 const showCreateNewProject = ref(false)
 const showDeleteProject = ref(false)
 const showEditProject = ref(false)

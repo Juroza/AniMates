@@ -234,6 +234,54 @@ app.post("/get-all-users", async (req, res) => {
     }
   }
 });
+app.get("/get-frame-url", async (req, res) => {
+  try {
+    console.log("Received get-frame-url request in Express proxy");
+    const { name } = req.query;
+    const apiRes = await axios.get(`${BACKEND_ENDPOINT}/get-frame-url`, {
+      params: { name },
+      headers: { "Content-Type": "application/json" },
+    });
+
+    res.status(apiRes.status).json(apiRes.data);
+  } catch (error) {
+    console.error("Error calling backend /get-frame-url:");
+    if (error.response) {
+      res.status(error.response.status).json(error.response.data);
+    } else {
+      console.error(error.message);
+      res
+        .status(500)
+        .json({ result: false, msg: "Backend service unreachable" });
+    }
+  }
+});
+app.post("/upload-frame", async (req, res) => {
+  try {
+    console.log("Received upload-frame request in Express proxy");
+    const { fileName } = req.body;
+    const apiRes = await axios.post(
+      `${BACKEND_ENDPOINT}/upload-frame`,
+      { fileName },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    res.status(apiRes.status).json(apiRes.data);
+  } catch (error) {
+    console.error("Error calling backend /get-all-users:");
+    if (error.response) {
+      res.status(error.response.status).json(error.response.data);
+    } else {
+      console.error(error.message);
+      res
+        .status(500)
+        .json({ result: false, msg: "Backend service unreachable" });
+    }
+  }
+});
+
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 app.use((req, res) => {
