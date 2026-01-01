@@ -50,11 +50,18 @@
           </div>
           <div class="canvas-wrapper">
             <canvas
-              id="sketchpad"
+              id="rendering"
               ref="canvas"
-              class="drawing-canvas"
-              width="canvas_width"
-              height="canvas_height"
+              class="canvas-layer"
+              :width="canvas_width"
+              :height="canvas_height"
+            ></canvas>
+            <canvas
+              id="drawing"
+              ref="drawingCanvas"
+              class="canvas-layer"
+              :width="canvas_width"
+              :height="canvas_height"
             ></canvas>
           </div>
 
@@ -110,7 +117,17 @@ import fill from 'atrament/fill';
 
 // References
 const canvas = ref<HTMLCanvasElement | null>(null)
-let atrament: Atrament | null = null
+const drawingCanvas = ref<HTMLCanvasElement | null>(null)
+// The layer for rendering completed actions
+let renderLayer: Atrament | null = null
+// The layer for registering actions as they happen
+let drawLayer: Atrament | null = null
+const modeMap = {
+  "draw": MODE_DRAW,
+  "erase": MODE_ERASE,
+  "fill": MODE_FILL,
+  "disabled": MODE_DISABLED
+}
 
 // State
 const canvas_width = ref<number>(800)
@@ -127,46 +144,60 @@ const actions = ref<{ date: Date, type: "stroke" | "fill" | "clear", action: unk
 onMounted(() => {
   if (!canvas.value) return
 
-  atrament = new Atrament(canvas.value, {
+  renderLayer = new Atrament(canvas.value, {
     width: canvas_width.value,
     height: canvas_height.value,
     color: color.value,
     fill: fill,
   })
-  atrament.recordStrokes = true
-  atrament.recordPaused = false
+
+  drawLayer = new Atrament(drawingCanvas.value, {
+    width: canvas_width.value,
+    height: canvas_height.value,
+    color: color.value,
+  })
+
+  drawLayer.recordStrokes = true
+  renderLayer.recordPaused = false
 
   // Setup event listeners
-  atrament.addEventListener('dirty', () => {
+  renderLayer.addEventListener('dirty', () => {
     isDirty.value = true
   })
 
-  atrament.addEventListener('clean', () => {
+  renderLayer.addEventListener('clean', () => {
     isDirty.value = false
   })
 
-  atrament.addEventListener('strokeend', () => {
-    strokeCount.value++
-  })
 
-  atrament.addEventListener('strokerecorded', ({ stroke }) =>
-  {
-    if (!atrament.recordPaused) {
-      actions.value.push({ date: new Date(), type: "stroke", action: stroke })
-    }
-  })
-
-  atrament.addEventListener('fillstart', ({ x, y }) => {
-    if (!atrament.recordPaused) {
+  renderLayer.addEventListener('fillstart', ({ x, y }) => {
+    if (!renderLayer.recordPaused) {
       actions.value.push({
         date: new Date(),
         type: "fill",
         action: {
           x: x,
           y: y,
-          color: atrament.color
+          color: renderLayer.color
         }
       })
+    }
+  })
+
+
+  drawLayer.addEventListener('strokerecorded', ({ stroke }) =>
+  {
+    if (!renderLayer.recordPaused) {
+      actions.value.push({ date: new Date(), type: "stroke", action: stroke })
+      renderStroke(stroke)
+    }
+  })
+
+  drawLayer.addEventListener('strokeend', () =>
+  {
+    if (mode.value === 'draw' || mode.value === 'erase') {
+      strokeCount.value++
+      drawLayer!.clear()
     }
   })
 
@@ -179,32 +210,86 @@ onMounted(() => {
 
 // Control functions
 const updateColor = () => {
-  if (!atrament) return
-  atrament.color = color.value
+  if (!renderLayer) return
+  renderLayer.color = color.value
+  drawLayer.color = color.value
 }
 
 const updateWeight = () => {
-  if (!atrament) return
-  atrament.weight = weight.value
+  if (!renderLayer) return
+  renderLayer.weight = weight.value
+  drawLayer.weight = weight.value
 }
 
 const updateSmoothing = () => {
-  if (!atrament) return
-  atrament.smoothing = smoothing.value
+  if (!renderLayer) return
+  renderLayer.smoothing = smoothing.value
+  drawLayer.smoothing = smoothing.value
 }
 
 const setMode = (newMode: 'draw' | 'erase' | 'fill') => {
-  if (!atrament) return
+  if (!renderLayer) return
   mode.value = newMode
-  atrament.mode = newMode === 'draw' ? MODE_DRAW : newMode === 'erase' ? MODE_ERASE : MODE_FILL
+  if (newMode === 'draw') {
+    drawLayer.mode = MODE_DRAW
+    renderLayer.mode = MODE_DISABLED
+  } else if (newMode === 'erase') {
+    drawLayer.mode = MODE_ERASE
+    renderLayer.mode = MODE_DISABLED
+  } else {
+    drawLayer.mode = MODE_DISABLED
+    renderLayer.mode = MODE_FILL
+  }
+}
 
+// This function is inspired by Atrament library example code: https://github.com/jakubfiala/atrament/tree/854c4c560ce2ff9d18788166fd24aa516cf05408?tab=readme-ov-file#fill-startend
+const renderStroke = (stroke) => {
+  const originalSettings = {
+    mode: mode.value,
+    weight: renderLayer!.weight,
+    smoothing: renderLayer!.smoothing,
+    color: renderLayer!.color,
+    adaptiveSmoothing: renderLayer.adaptiveSmoothing
+  }
+  // Disable recording while rendering
+  renderLayer!.recordPaused = true
+  drawLayer!.recordPaused = true
+
+  const segments = stroke.segments.slice()
+  renderLayer!.mode = modeMap[mode.value]
+  renderLayer!.weight = stroke.weight
+  renderLayer!.smoothing = stroke.smoothing
+  renderLayer!.color = stroke.color
+  renderLayer!.adaptiveSmoothing = stroke.adaptiveSmoothing
+
+  const startPoint = segments.shift().point
+  renderLayer!.beginStroke(startPoint.x, startPoint.y)
+
+  let prevPoint = startPoint
+  while (segments.length > 0) {
+    const segment = segments.shift()
+    const { x, y } = renderLayer.draw(segment.point.x, segment.point.y, prevPoint.x, prevPoint.y, segment.pressure)
+
+    prevPoint = { x, y };
+  }
+  renderLayer.endStroke(prevPoint.x, prevPoint.y)
+
+  renderLayer!.recordPaused = false
+  drawLayer!.recordPaused = false
+
+  // Restore original settings
+  setMode(originalSettings.mode)
+  renderLayer!.weight = originalSettings.weight
+  renderLayer!.smoothing = originalSettings.smoothing
+  renderLayer!.color = originalSettings.color
+  renderLayer!.adaptiveSmoothing = originalSettings.adaptiveSmoothing
 }
 
 const clearCanvas = () => {
-  if (!atrament) return
-  atrament.clear()
+  if (!renderLayer) return
+  renderLayer.clear()
   strokeCount.value = 0
-  if (!atrament.recordPaused) {
+  if (!renderLayer.recordPaused) {
       actions.value.push({ date: new Date(), type: "clear", action: null })
   }
 }
@@ -251,6 +336,9 @@ const clearCanvas = () => {
 }
 
 .canvas-wrapper {
+  position: relative;
+  width: v-bind('canvas_width');
+  height: v-bind('canvas_height');
   margin: 20px 0;
   border: 2px solid #ddd;
   border-radius: 8px;
@@ -258,11 +346,20 @@ const clearCanvas = () => {
   background-color: white;
 }
 
-.drawing-canvas {
+.canvas-layer {
+  position:absolute;
+  top:0px;
+  left:0px;
+  width: 100%;
+  height: 100%;
   display: block;
   border-radius: 6px;
   cursor: crosshair;
   touch-action: none;
+}
+
+.drawing-canvas {
+  border:3px solid #444;
 }
 
 .control-group {
