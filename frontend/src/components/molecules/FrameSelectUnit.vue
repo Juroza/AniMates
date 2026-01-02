@@ -31,20 +31,16 @@ function select() {
   emit('selected', props.frame)
 }
 import { computed } from 'vue'
-
+//Style from guy on stackoverflow and genai
 const shadowStyle = computed(() => {
   const r = props.rotation
 
-  // Clamp so it doesn't go crazy
   const clamped = Math.max(-60, Math.min(60, r))
 
-  // Horizontal shadow moves opposite to rotation
   const x = -clamped * 0.8
 
-  // Vertical shadow slightly increases with angle
   const y = 20 + Math.abs(clamped) * 0.3
 
-  // Blur increases with distance
   const blur = 40 + Math.abs(clamped) * 0.6
 
   return {
