@@ -1,5 +1,6 @@
 import { reactive, onMounted, onUnmounted } from 'vue'
-import { io } from 'socket.io-client'
+//import { io } from 'socket.io-client'
+import {socket} from '../plugins/sockets'
 import router from '../router'
 import { fa } from 'vuetify/locale'
 import axios from 'axios'
@@ -64,11 +65,15 @@ export async function getImageFramebyName(frame: Frame | undefined): Promise<Fra
     url: response.data.url,
   }
 }
-const socket = io(URL, {
-  autoConnect: true,
-})
+// const socket = io(URL, {
+//   autoConnect: true,
+// })
 socket.on('connect', () => {
   state.connected = true
+})
+socket.on('disconnect', () => {
+  state.connected = false
+  router.push({ name: 'Home' })
 })
 export function useSocket() {
   // Component-level lifecycle (optional)

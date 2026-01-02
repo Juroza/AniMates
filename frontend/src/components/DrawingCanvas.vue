@@ -117,6 +117,7 @@ import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atram
 // import { floodFill, hexToRgba } from './utils/floodFill'
 import { fi } from 'vuetify/locale';
 import { useSocket } from '../stores/socketState';
+import { socket } from '@/plugins/socket'
 
 // References
 const wrapper = ref<HTMLDivElement | null>(null)
@@ -392,6 +393,11 @@ const renderStroke = (stroke) => {
 // }
 
 
+
+socket.on('action', (action) => {
+  if (action.type !== 'stroke') return
+  renderStroke(action.payload)
+})
 </script>
 
 <style scoped>
