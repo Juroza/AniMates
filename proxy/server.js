@@ -213,6 +213,29 @@ app.post("/delete-project", async (req, res) => {
     }
   }
 });
+
+app.get("/load-frame", async (req, res) => {
+  try {
+    console.log("Received load-frame request in Express proxy");
+    const { name } = req.query;
+    const apiRes = await axios.get(`${BACKEND_ENDPOINT}/load-frame`, {
+      params: { name },
+      headers: { "Content-Type": "application/json" },
+    });
+
+    res.status(apiRes.status).json(apiRes.data);
+  } catch (error) {
+    console.error("Error calling backend /load-frame:");
+    if (error.response) {
+      res.status(error.response.status).json(error.response.data);
+    } else {
+      console.error(error.message);
+      res
+        .status(500)
+        .json({ result: false, msg: "Backend service unreachable" });
+    }
+  }
+});
 app.post("/get-all-users", async (req, res) => {
   try {
     console.log("Receivedget-all-users request in Express proxy");
@@ -224,6 +247,36 @@ app.post("/get-all-users", async (req, res) => {
     res.status(apiRes.status).json(apiRes.data);
   } catch (error) {
     console.error("Error calling backend /get-all-users:");
+    if (error.response) {
+      res.status(error.response.status).json(error.response.data);
+    } else {
+      console.error(error.message);
+      res
+        .status(500)
+        .json({ result: false, msg: "Backend service unreachable" });
+    }
+  }
+});
+
+app.post("/add-frame-to-project", async (req, res) => {
+  try {
+    console.log("Received add-frame-to-project request in Express proxy");
+    const { projectName, strokeRecord, frameNumber } = req.body;
+    const apiRes = await axios.post(
+      `${BACKEND_ENDPOINT}/add-frame-to-project`,
+      {
+        projectName,
+        strokeRecord,
+        frameNumber,
+      },
+      {
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    res.status(apiRes.status).json(apiRes.data);
+  } catch (error) {
+    console.error("Error calling backend /add-frame-to-project:");
     if (error.response) {
       res.status(error.response.status).json(error.response.data);
     } else {

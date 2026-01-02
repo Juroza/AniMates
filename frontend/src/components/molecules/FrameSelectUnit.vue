@@ -20,14 +20,19 @@
   /></v-container>
 </template>
 <script setup lang="ts">
+import router from '../../router'
 import { type Frame } from '../../stores/socketState'
+import { useSocket } from '../../stores/socketState'
 
+const { state } = useSocket()
 const props = defineProps<{
   frame: Frame | undefined
   rotation: number
 }>()
 const emit = defineEmits(['selected'])
 function select() {
+  router.push({ name: 'canvas' })
+  state.currentFrame = props.frame
   emit('selected', props.frame)
 }
 import { computed } from 'vue'

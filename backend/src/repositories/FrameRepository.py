@@ -6,5 +6,14 @@ class FrameRepository(ABC):
     def storeFrame(self,frame:Frame):
         pass
     @abstractmethod
-    def loadFrame(self,project:Project,frameNumber:int)->Frame:
+    def loadFrame(self,projectName:str,frameNumber:int)->Frame:
+        pass
+    @abstractmethod
+    def loadFrameByName(self,frameName:str)->Frame:
+        pass
+    @abstractmethod
+    def deleteFrame(self,frame:Frame):
+        pass
+    @abstractmethod
+    def updateFrameStrokeRecord(self,frame:Frame):
         pass

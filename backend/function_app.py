@@ -19,6 +19,9 @@ from src.functions.project.removeUserFromProjectFunction import bp as removeUser
 from src.functions.project.editProjectFunction import bp as editProjectFunction
 from src.functions.frame.getFrameURLFunction import bp as getFrameURLFunction
 from src.functions.frame.uploadFrameFunction import bp as uploadFrameFunction
+from src.functions.frame.addFrameFunction import bp as addFrameToProjectFunction
+from src.functions.frame.loadFrameByNameFunction import bp as loadFrameByName
+from src.functions.frame.deleteFrameByNameFunction import bp as deleteFrameByName
 app = func.FunctionApp()
 
 app.register_blueprint(registerFunction)
@@ -33,3 +36,6 @@ app.register_blueprint(getAllUsersFunction)
 app.register_blueprint(editProjectFunction)
 app.register_blueprint(getFrameURLFunction)
 app.register_blueprint(uploadFrameFunction)
+app.register_blueprint(addFrameToProjectFunction)
+app.register_blueprint(loadFrameByName)
+app.register_blueprint(deleteFrameByName)

@@ -5,7 +5,7 @@ from datetime import datetime
 from .User import User
 @dataclass
 class Project:
-    def __init__(self,name:str,owner_name:str,isPrivate:bool,users:List[str]=[],width:int=1980,height:int=1080,fps:int=10,dateCreated:datetime=datetime(1999, 1, 1,1,1,1,1),lastUpdate:datetime=datetime(1999, 1, 1,1,1,1,1),frameCount:int=0,):
+    def __init__(self,name:str,owner_name:str,isPrivate:bool,users:List[str]=[],width:int=1980,height:int=1080,fps:int=10,dateCreated:datetime=datetime(1999, 1, 1,1,1,1,1),lastUpdate:datetime=datetime(1999, 1, 1,1,1,1,1),frameCount:int=0,frames: List[str]=[]):
         self.projectName=name
         self.owner=owner_name
         self.private=isPrivate
@@ -16,6 +16,7 @@ class Project:
         self.dateCreated=dateCreated
         self.latestUpdateTime=lastUpdate
         self.frameCount=frameCount
+        self.frames=frames
         self.id=''
     def setInvitedUsers(self,users:List[str]):
         self.users=users
@@ -38,5 +39,5 @@ class Project:
     def setPrivate(self,priv:bool):
         self.private=priv
     def to_dict(self):
-        return {"id":self.id,"name":self.projectName,"owner":self.owner,"private":self.private,"users":self.users,"width":self.width,"height":self.height,"fps":self.FPS,"datetime_created":self.dateCreated.isoformat(),"datetime_modified":self.latestUpdateTime.isoformat(),"frameCount":self.frameCount}
+        return {"id":self.id,"name":self.projectName,"owner":self.owner,"private":self.private,"users":self.users,"width":self.width,"height":self.height,"fps":self.FPS,"datetime_created":self.dateCreated.isoformat(),"datetime_modified":self.latestUpdateTime.isoformat(),"frameCount":self.frameCount,"frames":self.frames}
 

@@ -15,8 +15,18 @@ export type Project = {
   datetime_modified: string
   frameCount: number
   id: string
+  frames: string[]
 }
 export type Frame = {
+  projectName: string
+  strokeRecord: string
+  frameNumber: number
+  frameName: string
+  url: string
+}
+export interface LoadFrameByNameResponse {
+  projectName: string
+  strokeRecord: string
   frameNumber: number
   frameName: string
   url: string
@@ -43,27 +53,70 @@ type clientStateData = {
   connected: boolean
   clientUser: User | undefined
   currentProject: Project | undefined
+  currentFrame: Frame | undefined
 }
 const state: clientStateData = reactive({
   connected: false,
   clientUser: undefined,
   currentProject: undefined,
+  currentFrame: undefined,
 })
 const URL = import.meta.env.DEV ? 'http://localhost:8080' : undefined
 export const BACKEND_ENDPOINT = import.meta.env.DEV ? 'http://localhost:8080' : ''
-export async function getImageFramebyName(frame: Frame | undefined): Promise<Frame> {
-  const frameName = frame?.frameName ?? 'i-guess-bro.jpg'
-  const frameNumber = frame?.frameNumber ?? 1
-  const response = await axios.get<getImageURLbyNameResponse>(BACKEND_ENDPOINT + '/get-frame-url', {
-    params: { name: frameName },
-  })
-  console.log('response')
-  console.log(response.statusText)
-  console.log(response.data)
-  return {
-    frameName,
-    frameNumber,
-    url: response.data.url,
+export async function getImageFramebyName(frameNameIn: string | undefined): Promise<Frame> {
+  const frameName = frameNameIn ?? 'i-guess-bro.jpg'
+  if (!frameNameIn) {
+    const response = await axios.get<getImageURLbyNameResponse>(
+      BACKEND_ENDPOINT + '/get-frame-url',
+      {
+        params: { name: frameName },
+      },
+    )
+    console.log('response')
+    console.log(response.statusText)
+    console.log(response.data)
+    return {
+      frameName: frameName ?? '',
+      frameNumber: 1,
+      url: response.data.url,
+      strokeRecord: '',
+      projectName: state.currentProject?.name ?? '',
+    }
+  } else {
+    const res = await axios.get<LoadFrameByNameResponse>(BACKEND_ENDPOINT + '/load-frame', {
+      params: { name: frameName },
+    })
+
+    if (res.data.strokeRecord.length == 0) {
+      const response = await axios.get<getImageURLbyNameResponse>(
+        BACKEND_ENDPOINT + '/get-frame-url',
+        {
+          params: { name: 'free-frame.png' },
+        },
+      )
+
+      return {
+        frameName: frameName ?? '',
+        frameNumber: res.data.frameNumber,
+        url: response.data.url,
+        projectName: res.data.projectName,
+        strokeRecord: res.data.strokeRecord,
+      }
+    }
+    const response2 = await axios.get<getImageURLbyNameResponse>(
+      BACKEND_ENDPOINT + '/get-frame-url',
+      {
+        params: { name: frameName },
+      },
+    )
+
+    return {
+      frameName: frameName ?? '',
+      frameNumber: res.data.frameNumber,
+      url: response2.data.url,
+      projectName: res.data.projectName,
+      strokeRecord: res.data.strokeRecord,
+    }
   }
 }
 const socket = io(URL, {
@@ -79,6 +132,10 @@ export function setClientUser(user: User) {
     state.clientUser = user
   }
 }
+export function setCurrentProject(project: Project | undefined) {
+  state.currentProject = project
+}
+
 export function useSocket() {
   // Component-level lifecycle (optional)
   onMounted(() => {

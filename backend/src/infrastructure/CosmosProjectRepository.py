@@ -39,7 +39,7 @@ class CosmosProjectRepository(ProjectRepository):
         readProj=self.container.read_item(item=id,partition_key=id)
         if(readProj["name"]==None):
             return None
-        project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"])
+        project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"],readProj["frames"])
         project.setID(readProj['id'])
         return project
     def getProjectByName(self,name):
@@ -50,7 +50,7 @@ class CosmosProjectRepository(ProjectRepository):
         if(len(query_result)==0):
             return None
         readProj=query_result[0]
-        project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"])
+        project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"],readProj["frames"])
         project.setID(readProj['id'])
         return project
     def getProjectsByUserName(self, name):
@@ -60,7 +60,7 @@ class CosmosProjectRepository(ProjectRepository):
         ))
         myProjects=[]
         for readProj in query_result:
-            project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"])
+            project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"],readProj["frames"])
             project.setID(readProj['id'])
             myProjects.append(project)
         query_collab_result = list(self.container.query_items(
@@ -69,7 +69,7 @@ class CosmosProjectRepository(ProjectRepository):
         ))
         collabProjects=[]
         for readProj in query_collab_result:
-            project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"])
+            project=Project(readProj["name"],readProj["owner"],readProj["private"],readProj["users"],readProj["width"],readProj["height"],readProj["fps"],datetime.datetime.strptime(readProj["datetime_created"],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(readProj["datetime_modified"],"%Y-%m-%dT%H:%M:%S.%f"),readProj["frameCount"],readProj["frames"])
             project.setID(readProj['id'])
             collabProjects.append(project)
         return [myProjects,collabProjects]
@@ -91,6 +91,8 @@ class CosmosProjectRepository(ProjectRepository):
         readProject['private']=project.private
         readProject['width']=project.width
         readProject['height']=project.height
+        readProject['frameCount']=project.frameCount
+        readProject['frames']= project.frames
         self.container.replace_item(readProject["id"],readProject)
         print("a4")
         return True

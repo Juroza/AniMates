@@ -45,14 +45,13 @@ def uploadFrame(req: func.HttpRequest)->func.HttpResponse:
         blob_service = BlobServiceClient.from_connection_string(conn_str)
         container_client = blob_service.get_container_client(container)
 
-        # Ensure container exists (optional; remove if you manage containers manually)
+
         try:
             container_client.create_container()
         except Exception:
             pass  # already exists / no permission; ignore
 
-        # Optional: make unique name to avoid collisions / caching issues
-        # Keep extension if present
+
         ext = ""
         if "." in filename:
             ext = "." + filename.split(".")[-1].lower()
@@ -69,7 +68,6 @@ def uploadFrame(req: func.HttpRequest)->func.HttpResponse:
 
         blob_url = f"https://{account_name}.blob.core.windows.net/{container}/{blob_name}"
 
-        # OPTIONAL: generate a read SAS URL (useful because your storage blocks public access)
         sas = generate_blob_sas(
             account_name=account_name,
             container_name=container,
