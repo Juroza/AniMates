@@ -13,4 +13,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8080',
+      '/socket.io': {
+        target: 'http://localhost:8080',
+        ws: true,
+      },
+    },
+  }
+
 })
