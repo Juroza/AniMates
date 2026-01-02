@@ -22,14 +22,14 @@
               >
                 ⌫ Erase
               </v-btn>
-              <v-btn
+              <!-- <v-btn
                 :color="mode === 'fill' ? 'success' : ''"
                 variant="outlined"
                 @click="setMode('fill')"
                 id="fill_button"
               >
                 🪣 Fill
-              </v-btn>
+              </v-btn> -->
               <v-btn
               color="warning"
               variant="outlined"
@@ -48,7 +48,7 @@
               </div>
             </div>
           </div>
-          <div class="canvas-wrapper">
+          <div class="canvas-wrapper" ref="wrapper">
             <canvas
               id="rendering"
               ref="canvas"
@@ -112,10 +112,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atrament'
-import fill from 'atrament/fill';
+import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atrament';
+// import fill from 'atrament/fill';
+// import { floodFill, hexToRgba } from './utils/floodFill'
+import { fi } from 'vuetify/locale';
 
 // References
+const wrapper = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const drawingCanvas = ref<HTMLCanvasElement | null>(null)
 // The layer for rendering completed actions
@@ -130,8 +133,8 @@ const modeMap = {
 }
 
 // State
-const canvas_width = ref<number>(800)
-const canvas_height = ref<number>(600)
+const canvas_width = ref<number>(0)
+const canvas_height = ref<number>(0)
 const color = ref<string>('#000000')
 const weight = ref<number>(3)
 const smoothing = ref<number>(0.85)
@@ -142,19 +145,25 @@ const actions = ref<{ date: Date, type: "stroke" | "fill" | "clear", action: unk
 
 // Initialize Atrament
 onMounted(() => {
-  if (!canvas.value) return
+  if (!canvas.value || !drawingCanvas.value || !wrapper.value) return
+
+
+  // Binding the dimensions of the canvas to the wrapper
+  const wrapper_rect = wrapper.value.getBoundingClientRect()
+  canvas_width.value = Math.floor(wrapper_rect.width)
+  canvas_height.value = Math.floor(wrapper_rect.height)
 
   renderLayer = new Atrament(canvas.value, {
     width: canvas_width.value,
     height: canvas_height.value,
     color: color.value,
-    fill: fill,
   })
 
   drawLayer = new Atrament(drawingCanvas.value, {
     width: canvas_width.value,
     height: canvas_height.value,
     color: color.value,
+    // fill: fill,
   })
 
   drawLayer.recordStrokes = true
@@ -170,25 +179,66 @@ onMounted(() => {
   })
 
 
-  renderLayer.addEventListener('fillstart', ({ x, y }) => {
-    if (!renderLayer.recordPaused) {
-      actions.value.push({
-        date: new Date(),
-        type: "fill",
-        action: {
-          x: x,
-          y: y,
-          color: renderLayer.color
-        }
-      })
-    }
-  })
+  // drawLayer.addEventListener('pointerdown', (eventData: PointerEvent) => {
+  //   if (mode.value !== 'fill' || !renderLayer) return
 
+  //   if (!renderLayer.recordPaused) {
+  //     const renderRect = canvas.value!.getBoundingClientRect()
+  //     const drawRect = drawingCanvas.value!.getBoundingClientRect()
+
+  //     // Calculate coordinates relative to renderLayer
+  //     const offsetX = eventData.clientX - drawRect.left
+  //     const offsetY = eventData.clientY - drawRect.top
+
+  //     const x = renderRect.left + offsetX
+  //     const y = renderRect.top + offsetY
+
+  //     actions.value.push({
+  //       date: new Date(),
+  //       type: 'fill',
+  //       action: { x ,y , color: color.value }
+  //     })
+
+  //     const eventClone = new PointerEvent(eventData.type, {
+  //       bubbles: true,
+  //       cancelable: true,
+  //       clientX: x,
+  //       clientY: y,
+  //       button: eventData.button,
+  //       buttons: eventData.buttons,
+  //       pointerType: eventData.pointerType,
+  //       pressure: eventData.pressure,
+  //       width: eventData.width,
+  //       height: eventData.height,
+  //       tiltX: eventData.tiltX,
+  //       tiltY: eventData.tiltY,
+  //       isPrimary: eventData.isPrimary,
+  //     })
+
+  //     renderFill(eventClone)
+  //   }
+  // })
+
+  // drawLayer.addEventListener('fillstart', (x: number, y: number) => {
+  //   if (!renderLayer.recordPaused) {
+  //     actions.value.push({
+  //       date: new Date(),
+  //       type: "fill",
+  //       action: { x: x, y: y, color: drawLayer.color } })
+
+  //   renderFill(x, y, drawLayer!.color)
+  //   }
+  // })
+
+  // drawLayer.addEventListener('fillend', () => {
+  //   drawLayer!.clear()
+  // })
 
   drawLayer.addEventListener('strokerecorded', ({ stroke }) =>
   {
-    if (!renderLayer.recordPaused) {
+    if (!renderLayer.recordPaused && !(mode.value === 'fill')) {
       actions.value.push({ date: new Date(), type: "stroke", action: stroke })
+
       renderStroke(stroke)
     }
   })
@@ -203,6 +253,7 @@ onMounted(() => {
 
 
   // Initial setup
+  setMode(mode.value)
   updateColor()
   updateWeight()
   updateSmoothing()
@@ -228,17 +279,28 @@ const updateSmoothing = () => {
 }
 
 const setMode = (newMode: 'draw' | 'erase' | 'fill') => {
-  if (!renderLayer) return
+  if (!renderLayer || !drawLayer) return
+
   mode.value = newMode
-  if (newMode === 'draw') {
+
+  if (newMode === 'fill') {
+    renderLayer.mode = MODE_DISABLED
+    drawLayer.mode = MODE_FILL
+  } else if (newMode === 'draw') {
+    renderLayer.mode = MODE_DISABLED
     drawLayer.mode = MODE_DRAW
-    renderLayer.mode = MODE_DISABLED
-  } else if (newMode === 'erase') {
-    drawLayer.mode = MODE_ERASE
-    renderLayer.mode = MODE_DISABLED
   } else {
-    drawLayer.mode = MODE_DISABLED
-    renderLayer.mode = MODE_FILL
+    renderLayer.mode = MODE_DISABLED
+    drawLayer.mode = MODE_ERASE
+  }
+}
+
+const clearCanvas = () => {
+  if (!renderLayer) return
+  renderLayer.clear()
+  strokeCount.value = 0
+  if (!renderLayer.recordPaused) {
+      actions.value.push({ date: new Date(), type: "clear", action: null })
   }
 }
 
@@ -255,6 +317,7 @@ const renderStroke = (stroke) => {
   renderLayer!.recordPaused = true
   drawLayer!.recordPaused = true
 
+  // Preparing render canvas settings
   const segments = stroke.segments.slice()
   renderLayer!.mode = modeMap[mode.value]
   renderLayer!.weight = stroke.weight
@@ -262,6 +325,7 @@ const renderStroke = (stroke) => {
   renderLayer!.color = stroke.color
   renderLayer!.adaptiveSmoothing = stroke.adaptiveSmoothing
 
+  // Drawing the stroke
   const startPoint = segments.shift().point
   renderLayer!.beginStroke(startPoint.x, startPoint.y)
 
@@ -274,6 +338,7 @@ const renderStroke = (stroke) => {
   }
   renderLayer.endStroke(prevPoint.x, prevPoint.y)
 
+
   renderLayer!.recordPaused = false
   drawLayer!.recordPaused = false
 
@@ -285,14 +350,22 @@ const renderStroke = (stroke) => {
   renderLayer!.adaptiveSmoothing = originalSettings.adaptiveSmoothing
 }
 
-const clearCanvas = () => {
-  if (!renderLayer) return
-  renderLayer.clear()
-  strokeCount.value = 0
-  if (!renderLayer.recordPaused) {
-      actions.value.push({ date: new Date(), type: "clear", action: null })
-  }
-}
+// const renderFill = (x: number, y: number, fillColor: string) => {
+//   if (!renderLayer) return
+//   renderLayer!.recordPaused = true
+
+//   const ctx = renderLayer.context
+//   if (!ctx) {
+//     renderLayer!.recordPaused = false
+//     return
+//   }
+//   floodFill(ctx, Math.floor(x), Math.floor(y), hexToRgba(fillColor))
+
+
+//   renderLayer!.recordPaused = false
+// }
+
+
 </script>
 
 <style scoped>
@@ -337,8 +410,9 @@ const clearCanvas = () => {
 
 .canvas-wrapper {
   position: relative;
-  width: v-bind('canvas_width');
-  height: v-bind('canvas_height');
+  width: 800px;
+  height: 600px;
+  max-width: 100%;
   margin: 20px 0;
   border: 2px solid #ddd;
   border-radius: 8px;
@@ -353,7 +427,6 @@ const clearCanvas = () => {
   width: 100%;
   height: 100%;
   display: block;
-  border-radius: 6px;
   cursor: crosshair;
   touch-action: none;
 }
@@ -361,6 +434,9 @@ const clearCanvas = () => {
 .drawing-canvas {
   border:3px solid #444;
 }
+
+#rendering { z-index: 1; }
+#drawing   { z-index: 2; }
 
 .control-group {
   display: flex;

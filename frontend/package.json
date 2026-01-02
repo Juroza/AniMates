@@ -21,6 +21,7 @@
     "format": "prettier --write --experimental-cli src/"
   },
   "dependencies": {
+    "@mdi/js": "^7.4.47",
     "atrament": "^5.1.0",
     "axios": "^1.13.2",
     "express": "^5.2.1",
