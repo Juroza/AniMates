@@ -17,7 +17,8 @@ class Frame:
     def setName(self,name:str):
         self.frameName=name
     def to_dict(self):
-        strokeRecordRep=[]
-        for stroke in self.strokeRecord:
-            strokeRecordRep.append(stroke.to_dict())
+        if self.strokeRecord:
+            strokeRecordRep=[stroke.to_dict() for stroke in self.strokeRecord]
+        else:
+            strokeRecordRep=[]
         return {"projectName":self.projectName, "strokeRecord" :strokeRecordRep,"frameNumber":self.frameNumber,"frameName":self.frameName,"url":self.url}
