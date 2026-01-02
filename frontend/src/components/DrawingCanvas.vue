@@ -118,6 +118,7 @@ import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atram
 import { fi } from 'vuetify/locale';
 import { useSocket } from '../stores/socketState';
 import { socket } from '@/plugins/socket'
+import { randomUUID } from 'crypto';
 
 // References
 const wrapper = ref<HTMLDivElement | null>(null)
@@ -325,6 +326,9 @@ const clearCanvas = () => {
 
   // Send clear action to the server
   socket.emit('drawing:action', {
+    id: randomUUID(),
+    roomid: 'placeholder-room-id', // Replace with actual room ID logic
+    userid: 'u1', // Replace with actual user ID logic
     date: new Date(),
     type: "clear",
     action: null
