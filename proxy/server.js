@@ -318,6 +318,23 @@ function handleFrameUpdate(updateInfo) {
 io.on("connection", (socket) => {
   console.log('socket connected', socket.id);
 
+  // Handle drawing events (stroke or clear)
+  socket.on('drawing:action', (payload) => {
+    console.log('Received drawing action:', payload.type);
+    
+    // Store the action on the server
+    actions.push(payload);
+    
+    // Broadcast the action to all connected clients
+    io.emit('drawing:action-confirmed', payload);
+  });
+
+  // Request all current actions when a client joins
+  socket.on('drawing:get-actions', () => {
+    console.log('Client requesting all actions');
+    socket.emit('drawing:actions-snapshot', actions);
+  });
+
   //Handle on frame update received
   socket.on('update', async (payload) => {
     handleFrameUpdate(payload);

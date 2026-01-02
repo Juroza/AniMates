@@ -111,11 +111,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atrament';
 // import fill from 'atrament/fill';
 // import { floodFill, hexToRgba } from './utils/floodFill'
 import { fi } from 'vuetify/locale';
+import { useSocket } from '../stores/socketState';
 
 // References
 const wrapper = ref<HTMLDivElement | null>(null)
@@ -131,6 +132,9 @@ const modeMap = {
   "fill": MODE_FILL,
   "disabled": MODE_DISABLED
 }
+
+// Socket connection
+const { socket } = useSocket()
 
 // State
 const canvas_width = ref<number>(0)
@@ -236,17 +240,19 @@ onMounted(() => {
 
   drawLayer.addEventListener('strokerecorded', ({ stroke }) =>
   {
-    if (!renderLayer.recordPaused && !(mode.value === 'fill')) {
-      actions.value.push({ date: new Date(), type: "stroke", action: stroke })
-
-      renderStroke(stroke)
+    if (!(mode.value === 'fill')) {
+      // Send the stroke to the server
+      socket.emit('drawing:action', {
+        date: new Date(),
+        type: "stroke",
+        action: stroke
+      })
     }
   })
 
   drawLayer.addEventListener('strokeend', () =>
   {
     if (mode.value === 'draw' || mode.value === 'erase') {
-      strokeCount.value++
       drawLayer!.clear()
     }
   })
@@ -257,6 +263,24 @@ onMounted(() => {
   updateColor()
   updateWeight()
   updateSmoothing()
+
+  // Listen for confirmed actions from the server
+  socket.on('drawing:action-confirmed', (confirmedAction) => {
+    console.log('Received confirmed action from server:', confirmedAction.type)
+
+    actions.value.push(confirmedAction)
+
+    if (confirmedAction.type === 'stroke') {
+      renderStroke(confirmedAction.action)
+      strokeCount.value++
+    } else if (confirmedAction.type === 'clear') {
+      renderLayer!.clear()
+      strokeCount.value = 0
+    }
+  })
+
+  // Request all existing actions when component mounts
+  socket.emit('drawing:get-actions')
 })
 
 // Control functions
@@ -297,11 +321,13 @@ const setMode = (newMode: 'draw' | 'erase' | 'fill') => {
 
 const clearCanvas = () => {
   if (!renderLayer) return
-  renderLayer.clear()
-  strokeCount.value = 0
-  if (!renderLayer.recordPaused) {
-      actions.value.push({ date: new Date(), type: "clear", action: null })
-  }
+
+  // Send clear action to the server
+  socket.emit('drawing:action', {
+    date: new Date(),
+    type: "clear",
+    action: null
+  })
 }
 
 // This function is inspired by Atrament library example code: https://github.com/jakubfiala/atrament/tree/854c4c560ce2ff9d18788166fd24aa516cf05408?tab=readme-ov-file#fill-startend
