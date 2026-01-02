@@ -241,19 +241,18 @@ onMounted(() => {
   drawLayer.addEventListener('strokerecorded', ({ stroke }) =>
   {
     if (!(mode.value === 'fill')) {
-      // Send the stroke to the server
-      // socket.emit('drawing:action', {
-      //   date: new Date(),
-      //   type: "stroke",
-      //   action: stroke
-      // })
+      socket.emit('drawing:action', {
+          date: new Date(),        
+          type: 'stroke',          
+          action: stroke       
+        });
     }
   })
 
   drawLayer.addEventListener('strokeend', () =>
   {
     if (mode.value === 'draw' || mode.value === 'erase') {
-      drawLayer!.clear()
+      drawLayer!.clear();
     }
   })
 
@@ -264,26 +263,71 @@ onMounted(() => {
   updateWeight()
   updateSmoothing()
 
-  // Handle confirmed actions recieved from the server
-  const handleActionConfirmed = (confirmedAction) => {
-    console.log('Received confirmed action from server:', confirmedAction.type)
+  const handleActionConfirmed = (action) => {
+    console.log('Received action from server:', action.type);
 
-    actions.value.push(confirmedAction)
+    // if action is in the past, we need to re-render the whole screen.
+    // for a smooth experience, we should make sure we don't interupt the user if they are drawing a new stroke
+    const actionTime = new Date(action.date).getTime();
+    const lastAction = actions.value[actions.value.length - 1]  // assumes last action is at the end of the list
+    const lastActionTime = lastAction ? new Date(lastAction.date).getTime() : 0;
 
-    if (confirmedAction.type === 'stroke') {
-      renderStroke(confirmedAction.action)
-      strokeCount.value++
-    } else if (confirmedAction.type === 'clear') {
-      renderLayer!.clear()
-      strokeCount.value = 0
+    if (actionTime < lastActionTime) {
+      console.log('This is a past action — needs full re-render');
+      socket.emit('drawing:get-actions')
+    } else {
+      console.log('This is a new action — append normally');
+      actions.value.push(action);
+      if (action.type === 'stroke') renderStroke(action.action);
+      else if (action.type === 'clear') renderLayer?.clear();
     }
-  }
+  };
+
+  // ***********I think this could be made reduntant by the action broadcast to all canvas viewers, may come back to it*/
+  // Handle confirmed actions recieved from the server
+  // const handleActionConfirmed = (confirmedAction) => {
+  //  console.log('Received confirmed action from server:', confirmedAction.type)
+
+  //  actions.value.push(confirmedAction)
+
+  //  if (confirmedAction.type === 'stroke') {
+  //    renderStroke(confirmedAction.action)
+  //    strokeCount.value++
+  //  } else if (confirmedAction.type === 'clear') {
+  //    renderLayer!.clear()
+  //    strokeCount.value = 0
+  //  }
+  //}
+
+  socket.on('drawing:actions-snapshot', (allActions) => {
+    console.log('Received all past actions from server:', allActions.length);
+
+    renderLayer?.clear();
+
+    // Sort by date to make sure they replay in order
+    const sortedActions = allActions.sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    );
+
+    // Replay each action
+    sortedActions.forEach((action) => {
+      if (action.type === 'stroke') {
+        renderStroke(action.action);
+      } else if (action.type === 'clear') {
+        renderLayer?.clear();
+      }
+    });
+
+    // Update local actions array to match server state
+    actions.value = sortedActions;
+    strokeCount.value = sortedActions.filter(a => a.type === 'stroke').length;
+  });
 
   // Set up socket listeners
-  // socket.on('drawing:action-confirmed', handleActionConfirmed)
+  socket.on('drawing:action-confirmed', handleActionConfirmed)
 
   // Request all existing actions when component mounts
-  // socket.emit('drawing:get-actions')
+  socket.emit('drawing:get-actions')
 
 })
 

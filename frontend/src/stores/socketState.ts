@@ -54,6 +54,11 @@ const state: clientStateData = reactive({
   clientUser: undefined,
   currentProject: undefined,
 })
+
+export function setClientUser(user: User | undefined) {
+  state.clientUser = user
+}
+
 const URL = import.meta.env.DEV ? 'http://localhost:8080' : undefined
 export const BACKEND_ENDPOINT = import.meta.env.DEV ? 'http://localhost:8080' : ''
 export async function getImageFramebyName(frame: Frame | undefined): Promise<Frame> {
