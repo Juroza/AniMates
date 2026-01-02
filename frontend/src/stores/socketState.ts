@@ -16,32 +16,39 @@ export type Project = {
   frameCount: number
   id: string
 }
+
 export type Frame = {
   frameNumber: number
   frameName: string
   url: string
 }
+
 export type User = {
   username: string
   password: string
   id: string | undefined
 }
+
 export interface getAllUsersResponse {
   id: string
   username: string
 }
+
 export interface getImageURLbyNameResponse {
   url: string
 }
+
 export interface getUsersProjectsResponse {
   'my-projects': Project[]
   'collab-projects': Project[]
 }
+
 type clientStateData = {
   connected: boolean
   clientUser: User | undefined
   currentProject: Project | undefined
 }
+
 const state: clientStateData = reactive({
   connected: false,
   clientUser: undefined,
@@ -66,30 +73,50 @@ export async function getImageFramebyName(frame: Frame | undefined): Promise<Fra
 }
 const socket = io(URL, {
   autoConnect: true,
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  reconnectionAttempts: 5,
 })
+
 socket.on('connect', () => {
   state.connected = true
+  console.log('Socket connected to:', URL)
 })
+
+socket.on('connect_error', (error) => {
+  state.connected = false
+  console.error('Socket connection failed:', error)
+})
+
+socket.on('disconnect', () => {
+  state.connected = false
+  console.log('Socket disconnected')
+})
+
 export function useSocket() {
   // Component-level lifecycle (optional)
-  onMounted(() => {
-    console.log('Socket composable mounted')
-  })
+  // onMounted(() => {
+  //   console.log('Socket composable mounted')
+  // })
 
-  onUnmounted(() => {
-    console.log('Socket composable unmounted')
-  })
+  // onUnmounted(() => {
+  //   console.log('Socket composable unmounted')
+  // })
 
   function send(event: string, payload: string) {
     socket.emit(event, payload)
   }
 
-  function on(event: string, callback: () => void) {
+  function on(event: string, callback: (data: any) => void) {
     socket.on(event, callback)
+    // onUnmounted(() => {
+    //   socket.off(event, callback)
+    // })
+  }
 
-    onUnmounted(() => {
-      socket.off(event, callback)
-    })
+  function off(event: string, callback: (data: any) => void) {
+    socket.off(event, callback)
   }
 
   return {
@@ -97,5 +124,6 @@ export function useSocket() {
     socket,
     send,
     on,
+    off,
   }
 }

@@ -242,11 +242,11 @@ onMounted(() => {
   {
     if (!(mode.value === 'fill')) {
       // Send the stroke to the server
-      socket.emit('drawing:action', {
-        date: new Date(),
-        type: "stroke",
-        action: stroke
-      })
+      // socket.emit('drawing:action', {
+      //   date: new Date(),
+      //   type: "stroke",
+      //   action: stroke
+      // })
     }
   })
 
@@ -264,8 +264,8 @@ onMounted(() => {
   updateWeight()
   updateSmoothing()
 
-  // Listen for confirmed actions from the server
-  socket.on('drawing:action-confirmed', (confirmedAction) => {
+  // Handle confirmed actions recieved from the server
+  const handleActionConfirmed = (confirmedAction) => {
     console.log('Received confirmed action from server:', confirmedAction.type)
 
     actions.value.push(confirmedAction)
@@ -277,10 +277,19 @@ onMounted(() => {
       renderLayer!.clear()
       strokeCount.value = 0
     }
-  })
+  }
+
+  // Set up socket listeners
+  // socket.on('drawing:action-confirmed', handleActionConfirmed)
 
   // Request all existing actions when component mounts
-  socket.emit('drawing:get-actions')
+  // socket.emit('drawing:get-actions')
+
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  // socket.off('drawing:action-confirmed', handleActionConfirmed)
 })
 
 // Control functions
@@ -323,11 +332,11 @@ const clearCanvas = () => {
   if (!renderLayer) return
 
   // Send clear action to the server
-  socket.emit('drawing:action', {
-    date: new Date(),
-    type: "clear",
-    action: null
-  })
+  // socket.emit('drawing:action', {
+  //   date: new Date(),
+  //   type: "clear",
+  //   action: null
+  // })
 }
 
 // This function is inspired by Atrament library example code: https://github.com/jakubfiala/atrament/tree/854c4c560ce2ff9d18788166fd24aa516cf05408?tab=readme-ov-file#fill-startend

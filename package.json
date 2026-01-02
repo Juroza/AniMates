@@ -18,6 +18,7 @@
     "start": "node proxy/server.js"
   },
   "dependencies": {
+    "atrament": "^5.1.0",
     "axios": "^1.13.2",
     "cors": "^2.8.5",
     "express": "^5.2.1",
