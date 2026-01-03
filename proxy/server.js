@@ -2,7 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import http from "http";
-import SocketIO from "socket.io";
+import { Server } from "socket.io";
 import cors from "cors";
 import axios from "axios";
 const __filename = fileURLToPath(import.meta.url);
@@ -345,12 +345,13 @@ server.listen(port, () => {
   console.log("Server running on port", port);
 });
 
-const io = new SocketIO(server, {
+const io = new Server(server, {
   cors: {
     origin: FRONTEND_URL,
     methods: ["GET", "POST"],
   },
 });
+
 class FrameSessionState {
   constructor(frameName, strokeRecords, projectName) {
     this.frameName = frameName;
