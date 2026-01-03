@@ -2,9 +2,12 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import http from "http";
-import { Server } from "socket.io";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
 import cors from "cors";
 import axios from "axios";
+const { Server } = require("socket.io");
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const app = express();
