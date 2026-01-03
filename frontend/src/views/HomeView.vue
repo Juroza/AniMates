@@ -50,7 +50,6 @@
       >
       </ProjectList>
       <ProjectList
-        :key="state.clientUser?.myProjects?.length"
         :projects="state.clientUser?.collabProjects"
         title="Collaboration Projects"
         :selected-project="selectedProject"
@@ -105,11 +104,13 @@ const { state } = useSocket()
 const selectedProject = ref('')
 const selectedProjectFull = computed(() => {
   const a = state.clientUser?.myProjects?.filter((proj) => proj.name === selectedProject.value)
-  if (!a) {
+  if (!a) return
+  if (a.length == 0) {
     const b = state.clientUser?.collabProjects?.filter(
       (proj) => proj.name === selectedProject.value,
     )
-    if (!b) {
+    if (!b) return
+    if (b.length == 0) {
       return undefined
     }
     return b[0]

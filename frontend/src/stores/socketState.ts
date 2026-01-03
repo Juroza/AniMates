@@ -17,20 +17,65 @@ export type Project = {
   id: string
   frames: string[]
 }
+export type StrokeSegment = {
+  point: { x: number; y: number }
+  time: number
+  pressure: number
+}
+
+export type Stroke = {
+  segments: StrokeSegment[]
+  mode: string
+  weight: number
+  smoothing: number
+  color?: string
+  colour?: string
+  adaptiveSmoothing?: boolean
+  adaptiveStroke?: boolean
+}
 export type Frame = {
   projectName: string
-  strokeRecord: string
+  strokeRecord: Stroke[]
   frameNumber: number
   frameName: string
   url: string
 }
 export interface LoadFrameByNameResponse {
   projectName: string
-  strokeRecord: string
+  strokeRecord: Stroke[] | string
   frameNumber: number
   frameName: string
   url: string
 }
+function normalizeStrokeRecord(input: unknown): Stroke[] {
+  if (!input) return []
+  if (Array.isArray(input)) return input as Stroke[]
+  if (typeof input === 'string') {
+    try {
+      const parsed = JSON.parse(input)
+      return Array.isArray(parsed) ? (parsed as Stroke[]) : [parsed as Stroke]
+    } catch {
+      return []
+    }
+  }
+
+  return [input as Stroke]
+}
+export function setCurrentFrame(frame: Frame | undefined) {
+  state.currentFrame = frame
+}
+
+export function patchCurrentFrame(patch: Partial<Frame>) {
+  if (!state.currentFrame) return
+  Object.assign(state.currentFrame, patch)
+}
+
+export function setCurrentFrameStrokeRecord(strokes: Stroke[]) {
+  if (!state.currentFrame) return
+
+  state.currentFrame.strokeRecord = [...strokes]
+}
+
 export type User = {
   username: string
   password: string
@@ -79,7 +124,7 @@ export async function getImageFramebyName(frameNameIn: string | undefined): Prom
       frameName: frameName ?? '',
       frameNumber: 1,
       url: response.data.url,
-      strokeRecord: '',
+      strokeRecord: [],
       projectName: state.currentProject?.name ?? '',
     }
   } else {
@@ -100,7 +145,7 @@ export async function getImageFramebyName(frameNameIn: string | undefined): Prom
         frameNumber: res.data.frameNumber,
         url: response.data.url,
         projectName: res.data.projectName,
-        strokeRecord: res.data.strokeRecord,
+        strokeRecord: normalizeStrokeRecord(res.data.strokeRecord),
       }
     }
     const response2 = await axios.get<getImageURLbyNameResponse>(
@@ -115,16 +160,65 @@ export async function getImageFramebyName(frameNameIn: string | undefined): Prom
       frameNumber: res.data.frameNumber,
       url: response2.data.url,
       projectName: res.data.projectName,
-      strokeRecord: res.data.strokeRecord,
+      strokeRecord: normalizeStrokeRecord(res.data.strokeRecord),
     }
   }
 }
+
 const socket = io(URL, {
   autoConnect: true,
+  reconnection: true,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 5000,
+  reconnectionAttempts: 5,
 })
+
 socket.on('connect', () => {
   state.connected = true
+  console.log('Socket connected to:', URL)
 })
+socket.on('frameDataRetrieval', (payload: any) => {
+  if (!state.currentFrame) return
+  if (payload.frameName !== state.currentFrame.frameName) return
+
+  const strokes = normalizeStrokeRecord(payload.strokeRecord)
+  patchCurrentFrame({
+    frameNumber: payload.frameNumber,
+    projectName: payload.projectName,
+  })
+  setCurrentFrameStrokeRecord(strokes)
+})
+
+socket.on('drawing:action-confirmed', (payload: any) => {
+  if (!state.currentFrame) return
+  if (payload.frameName !== state.currentFrame.frameName) return
+
+  if (payload.type === 'stroke' && payload.stroke) {
+    state.currentFrame.strokeRecord.push(payload.stroke as Stroke)
+    state.currentFrame.strokeRecord = [...state.currentFrame.strokeRecord]
+  } else if (payload.type === 'clear') {
+    setCurrentFrameStrokeRecord([])
+  }
+})
+
+socket.on('drawing:actions-snapshot', (payload: any) => {
+  if (!state.currentFrame) return
+  if (payload.frameName !== state.currentFrame.frameName) return
+
+  setCurrentFrameStrokeRecord(normalizeStrokeRecord(payload.strokeRecord))
+  patchCurrentFrame({ frameNumber: payload.frameNumber })
+})
+
+socket.on('connect_error', (error) => {
+  state.connected = false
+  console.error('Socket connection failed:', error)
+})
+
+socket.on('disconnect', () => {
+  state.connected = false
+  console.log('Socket disconnected')
+})
+
 export function setClientUser(user: User) {
   if (state.clientUser) {
     Object.assign(state.clientUser, user)
@@ -135,27 +229,39 @@ export function setClientUser(user: User) {
 export function setCurrentProject(project: Project | undefined) {
   state.currentProject = project
 }
+export function joinFrameSession() {
+  const frameName = state.currentFrame?.frameName
+  if (!frameName) return
+
+  setCurrentFrameStrokeRecord([])
+
+  socket.emit('joinFrame', { frameName })
+  socket.emit('drawing:get-actions', { frameName })
+}
 
 export function useSocket() {
   // Component-level lifecycle (optional)
-  onMounted(() => {
-    console.log('Socket composable mounted')
-  })
+  // onMounted(() => {
+  //   console.log('Socket composable mounted')
+  // })
 
-  onUnmounted(() => {
-    console.log('Socket composable unmounted')
-  })
+  // onUnmounted(() => {
+  //   console.log('Socket composable unmounted')
+  // })
 
   function send(event: string, payload: string) {
     socket.emit(event, payload)
   }
 
-  function on(event: string, callback: () => void) {
+  function on(event: string, callback: (data: any) => void) {
     socket.on(event, callback)
+    // onUnmounted(() => {
+    //   socket.off(event, callback)
+    // })
+  }
 
-    onUnmounted(() => {
-      socket.off(event, callback)
-    })
+  function off(event: string, callback: (data: any) => void) {
+    socket.off(event, callback)
   }
 
   return {
@@ -163,5 +269,6 @@ export function useSocket() {
     socket,
     send,
     on,
+    off,
   }
 }

@@ -22,6 +22,7 @@ from src.functions.frame.uploadFrameFunction import bp as uploadFrameFunction
 from src.functions.frame.addFrameFunction import bp as addFrameToProjectFunction
 from src.functions.frame.loadFrameByNameFunction import bp as loadFrameByName
 from src.functions.frame.deleteFrameByNameFunction import bp as deleteFrameByName
+from src.functions.frame.updateFrameFunction import bp as updateFrameFunction
 app = func.FunctionApp()
 
 app.register_blueprint(registerFunction)
@@ -39,3 +40,4 @@ app.register_blueprint(uploadFrameFunction)
 app.register_blueprint(addFrameToProjectFunction)
 app.register_blueprint(loadFrameByName)
 app.register_blueprint(deleteFrameByName)
+app.register_blueprint(updateFrameFunction)

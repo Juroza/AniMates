@@ -22,7 +22,7 @@
 <script setup lang="ts">
 import router from '../../router'
 import { type Frame } from '../../stores/socketState'
-import { useSocket } from '../../stores/socketState'
+import { useSocket, joinFrameSession } from '../../stores/socketState'
 
 const { state } = useSocket()
 const props = defineProps<{
@@ -33,6 +33,7 @@ const emit = defineEmits(['selected'])
 function select() {
   router.push({ name: 'canvas' })
   state.currentFrame = props.frame
+  joinFrameSession()
   emit('selected', props.frame)
 }
 import { computed } from 'vue'

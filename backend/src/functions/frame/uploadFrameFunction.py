@@ -62,7 +62,7 @@ def uploadFrame(req: func.HttpRequest)->func.HttpResponse:
         # Upload
         blob_client.upload_blob(
             data,
-            overwrite=False,
+            overwrite=True,
             content_settings=ContentSettings(content_type=content_type),
         )
 

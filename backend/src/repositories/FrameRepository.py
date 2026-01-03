@@ -15,5 +15,5 @@ class FrameRepository(ABC):
     def deleteFrame(self,frame:Frame):
         pass
     @abstractmethod
-    def updateFrameStrokeRecord(self,frame:Frame):
+    def updateFrame(self,frame:Frame):
         pass

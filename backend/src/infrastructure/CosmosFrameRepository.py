@@ -4,7 +4,7 @@ from src.repositories.FrameRepository import FrameRepository
 from src.domains.Project import Project
 from src.domains.Frame import Frame
 from src.domains.Stroke import Stroke,Segment,Point
-
+from azure.cosmos.exceptions import CosmosResourceNotFoundError
 class CosmosFrameRepository(FrameRepository):
     def __init__(self,container:ContainerProxy):
         self.container=container
@@ -63,7 +63,7 @@ class CosmosFrameRepository(FrameRepository):
             strokeRec.setSegments(segmentReps)
             strokeRecord.append(strokeRec)
 
-        return Frame(projectName, frameNumber,frame_data.get("frameName", "") ,strokeRecord)
+        return Frame(projectName, frameNumber,frame_data.get("frameName", "") ,strokeRecord,frame_data.get("id"))
     def loadFrameByName(self, frameName):
         query_result = list(self.container.query_items(
         query=f"SELECT * FROM c WHERE c.frameName='{frameName}'",
@@ -83,6 +83,7 @@ class CosmosFrameRepository(FrameRepository):
         projectName = doc.get("projectName", "")
         frameNumber = int(doc.get("frameNumber", 0))
         frameName = doc.get("frameName", "")
+        id=doc.get("id")
 
         strokeRecords: List[Stroke] = []
 
@@ -113,7 +114,7 @@ class CosmosFrameRepository(FrameRepository):
             strokeObj.setSegments(segmentObjs)
             strokeRecords.append(strokeObj)
 
-        frame = Frame(projectName, frameNumber, frameName, strokeRecords)
+        frame = Frame(projectName, frameNumber, frameName, strokeRecords,id)
 
         # If you store url in Cosmos, bring it across
         if "url" in doc:
@@ -131,5 +132,15 @@ class CosmosFrameRepository(FrameRepository):
         for r in results:
             self.container.delete_item(r["id"], r["id"])
         return True
-    def updateFrameStrokeRecord(self, frame):
-        return super().updateFrameStrokeRecord(frame)
+    def updateFrame(self, frame):
+        print("a2")
+        print("frameid")
+        readFrame=self.container.read_item(item=frame.id,partition_key=frame.id)
+        strokeRep=[]
+        for stroke in frame.strokeRecord:
+            strokeRep.append(stroke.to_dict())
+        readFrame["strokeRecord"]=strokeRep
+        readFrame["frameNumber"]=frame.frameNumber
+        self.container.replace_item(readFrame["id"],readFrame)
+        print("a4")
+        return True
