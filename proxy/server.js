@@ -2,10 +2,7 @@ import express from "express";
 import path from "path";
 import { fileURLToPath } from "url";
 import http from "http";
-import { createRequire } from "module";
-const require = createRequire(import.meta.url);
-
-const { Server } = require("socket.io");
+import SocketIO from "socket.io";
 import cors from "cors";
 import axios from "axios";
 const __filename = fileURLToPath(import.meta.url);
@@ -348,7 +345,7 @@ server.listen(port, () => {
   console.log("Server running on port", port);
 });
 
-const io = new Server(server, {
+const io = new SocketIO(server, {
   cors: {
     origin: FRONTEND_URL,
     methods: ["GET", "POST"],
