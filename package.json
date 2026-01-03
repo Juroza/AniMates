@@ -1,26 +1,22 @@
 {
   "name": "animates",
   "version": "1.0.0",
-  "description": "This template should help get you started developing with Vue 3 in Vite.",
-  "homepage": "https://github.com/Juroza/AniMates#readme",
-  "bugs": {
-    "url": "https://github.com/Juroza/AniMates/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Juroza/AniMates.git"
-  },
-  "license": "ISC",
-  "author": "",
   "type": "commonjs",
   "main": "proxy/server.js",
   "scripts": {
     "start": "node proxy/server.js"
   },
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "axios": "^1.13.2",
     "cors": "^2.8.5",
     "express": "^5.2.1",
-    "socket.io": "^4.8.1"
+    "socket.io": "4.7.5",
+    "debug": "4.3.4"
+  },
+  "overrides": {
+    "debug": "4.3.4"
   }
 }
