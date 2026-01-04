@@ -299,10 +299,7 @@ app.get("/get-frame-url", async (req, res) => {
     console.log("Received get-frame-url request in Express proxy");
     const { name } = req.query;
 
-    const apiRes = await axios.get(`${BACKEND_ENDPOINT}/get-frame-url`, {
-      params: { name },
-      headers: { "Content-Type": "application/json" },
-    });
+    const apiRes = callGetFrameURL(name)
 
     res.status(apiRes.status).json(apiRes.data);
   } catch (error) {
@@ -508,6 +505,28 @@ function getCanvasImage(
   return canvas.toBuffer("image/png");
 }
 
+// Creating a URL for a frame in a consistent manner
+function constructFrameURL(frameName) {
+  session = frameSessions.get(frameName)
+  filename = `${session.projectName}.${frameNumber}.png`;
+
+  try {
+    // Producing a url for the frame based on the filename
+    const apiRes = callGetFrameURL(filename)
+  } catch (error) {
+    console.error("Error calling backend /get-frame-url:");
+  }
+  const data = apiRes.data
+  return data.url
+}
+
+async function callGetFrameURL(frameName) {
+  const apiRes = await axios.get(`${BACKEND_ENDPOINT}/get-frame-url`, {
+      params: { name },
+      headers: { "Content-Type": "application/json" },
+    });
+  return apiRes
+}
 
 setInterval(async () => {
   const dirtySessions = [...frameSessions.values()].filter((s) => s.dirty);
