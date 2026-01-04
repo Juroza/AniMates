@@ -192,7 +192,7 @@ onMounted(() => {
   })
 
   drawLayer.addEventListener('strokeend', () => {
-    if (mode.value === 'draw' || mode.value === 'erase') drawLayer!.clear()
+    drawLayer!.clear()
   })
 
   setMode(mode.value)
@@ -257,6 +257,10 @@ const setMode = (newMode: 'draw' | 'erase' | 'fill' | 'disabled') => {
   mode.value = newMode
   renderLayer.mode = MODE_DISABLED
   drawLayer.mode = modeMap[newMode]
+  if (newMode === 'erase') {
+    drawLayer.mode = MODE_DRAW
+    drawLayer.color = '#FFFFFF'
+  }
 }
 
 const renderStroke = ({ stroke }: { stroke: Stroke }) => {
