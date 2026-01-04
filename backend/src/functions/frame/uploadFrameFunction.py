@@ -7,7 +7,7 @@ from azure.storage.blob import BlobServiceClient, ContentSettings
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 from azure.storage.blob import generate_blob_sas, BlobSasPermissions
 bp= func.Blueprint()
-## Cutting corners with AI here mate, no time but works anyway
+
 @bp.route("upload-frame",auth_level=func.AuthLevel.ANONYMOUS,methods=["POST"])
 def uploadFrame(req: func.HttpRequest)->func.HttpResponse:
     try:

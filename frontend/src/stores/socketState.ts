@@ -138,7 +138,7 @@ function emitLocal(event: string, data: any) {
   for (const cb of handlers[event] ?? []) cb(data)
 }
 
-// reconnect settings (similar to your socket.io config)
+// reconnect settings
 const reconnect = {
   enabled: true,
   delay: 1000,
@@ -257,7 +257,7 @@ export async function getImageFramebyName(frameNameIn: string | undefined): Prom
   }
 }
 
-// -------------------- WS event handlers to match your old socket.io ones --------------------
+// -------------------- WS event handlers --------------------
 on('frameDataRetrieval', (payload: any) => {
   if (!state.currentFrame) return
   if (payload.frameName !== state.currentFrame.frameName) return
