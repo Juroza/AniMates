@@ -5,6 +5,9 @@
       <v-card-text>
         <div class="side-by-side">
           <div class="toolbar-container-left">
+            <!-- <div class="back-button">
+
+            </div> -->
             <div class="toolbar-left">
               <v-btn
                 :color="mode === 'draw' ? 'primary' : ''"
@@ -143,7 +146,7 @@ const canvas_height = ref<number>(0)
 const color = ref<string>('#000000')
 const weight = ref<number>(3)
 const smoothing = ref<number>(0.85)
-const mode = ref<'draw' | 'erase' | 'fill'>('draw')
+const mode = ref<'draw' | 'erase' | 'fill' | 'disabled'>('draw')
 const isDirty = ref<boolean>(false)
 const strokeCount = ref<number>(0)
 
@@ -247,7 +250,7 @@ const updateSmoothing = () => {
   drawLayer.smoothing = smoothing.value
 }
 
-const setMode = (newMode: 'draw' | 'erase' | 'fill') => {
+const setMode = (newMode: 'draw' | 'erase' | 'fill' | 'disabled') => {
   if (!renderLayer || !drawLayer) return
   mode.value = newMode
   renderLayer.mode = MODE_DISABLED
@@ -269,7 +272,7 @@ const renderStroke = ({ stroke }: { stroke: Stroke }) => {
   const segments = stroke.segments.slice()
   if (segments.length === 0) return
 
-  renderLayer!.mode = modeMap[mode.value]
+  renderLayer!.mode = modeMap[stroke.mode]
   renderLayer!.weight = stroke.weight
   renderLayer!.smoothing = stroke.smoothing
   renderLayer!.color = stroke.color ?? stroke.colour ?? '#000000'

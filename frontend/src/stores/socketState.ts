@@ -25,7 +25,7 @@ export type StrokeSegment = {
 
 export type Stroke = {
   segments: StrokeSegment[]
-  mode: string
+  mode: 'draw' | 'erase' | 'fill' | 'disabled'
   weight: number
   smoothing: number
   color?: string
