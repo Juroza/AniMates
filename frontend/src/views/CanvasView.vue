@@ -30,9 +30,7 @@
               >
                 🪣 Fill
               </v-btn> -->
-              <v-btn color="warning" variant="outlined" @click="clearCanvas" id="clear_button">
-                🗑️ Clear
-              </v-btn>
+              <v-btn color="warning" variant="outlined" id="clear_button"> 🗑️ Clear </v-btn>
 
               <div class="info-section">
                 <p><strong>Status:</strong> {{ isDirty ? '✏️ Drawing...' : '⭐ Ready' }}</p>
@@ -95,24 +93,21 @@
     </v-card>
   </div>
 </template>
-
+<!-- =========================== CanvasView.vue (only the websocket bits changed) =========================== -->
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atrament'
-// import fill from 'atrament/fill';
-// import { floodFill, hexToRgba } from './utils/floodFill'
 import { useSocket, joinFrameSession } from '../stores/socketState'
 import type { Stroke } from '../stores/socketState'
 
-// References
 const wrapper = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const drawingCanvas = ref<HTMLCanvasElement | null>(null)
 let pngInterval: number | null = null
-// The layer for rendering completed actions
+
 let renderLayer: InstanceType<typeof Atrament> | null = null
-// The layer for registering actions as they happen
 let drawLayer: InstanceType<typeof Atrament> | null = null
+
 const modeMap = {
   draw: MODE_DRAW,
   erase: MODE_ERASE,
@@ -120,7 +115,6 @@ const modeMap = {
   disabled: MODE_DISABLED,
 }
 
-// Socket connection
 const { state, socket } = useSocket()
 const strokes = computed(() => state.currentFrame?.strokeRecord ?? [])
 
@@ -136,15 +130,14 @@ watch(
 watch(
   strokes,
   (newStrokes) => {
-    if (!renderLayer) return // ✅ wait until canvas is ready
+    if (!renderLayer) return
     renderLayer.clear()
     newStrokes.forEach((s) => renderStroke({ stroke: s }))
     strokeCount.value = newStrokes.length
   },
-  { deep: true, immediate: true }, // optional: render immediately once ready
+  { deep: true, immediate: true },
 )
 
-// State
 const canvas_width = ref<number>(0)
 const canvas_height = ref<number>(0)
 const color = ref<string>('#000000')
@@ -154,12 +147,10 @@ const mode = ref<'draw' | 'erase' | 'fill'>('draw')
 const isDirty = ref<boolean>(false)
 const strokeCount = ref<number>(0)
 
-// Initialize Atrament
 onMounted(() => {
   if (state.currentFrame?.frameName) joinFrameSession()
   if (!canvas.value || !drawingCanvas.value || !wrapper.value) return
 
-  // Binding the dimensions of the canvas to the wrapper
   const wrapper_rect = wrapper.value.getBoundingClientRect()
   canvas_width.value = Math.floor(wrapper_rect.width)
   canvas_height.value = Math.floor(wrapper_rect.height)
@@ -174,75 +165,13 @@ onMounted(() => {
     width: canvas_width.value,
     height: canvas_height.value,
     color: color.value,
-    // fill: fill,
   })
 
   drawLayer.recordStrokes = true
   renderLayer.recordPaused = false
 
-  // Setup event listeners
-  renderLayer.addEventListener('dirty', () => {
-    isDirty.value = true
-  })
-
-  renderLayer.addEventListener('clean', () => {
-    isDirty.value = false
-  })
-
-  // drawLayer.addEventListener('pointerdown', (eventData: PointerEvent) => {
-  //   if (mode.value !== 'fill' || !renderLayer) return
-
-  //   if (!renderLayer.recordPaused) {
-  //     const renderRect = canvas.value!.getBoundingClientRect()
-  //     const drawRect = drawingCanvas.value!.getBoundingClientRect()
-
-  //     // Calculate coordinates relative to renderLayer
-  //     const offsetX = eventData.clientX - drawRect.left
-  //     const offsetY = eventData.clientY - drawRect.top
-
-  //     const x = renderRect.left + offsetX
-  //     const y = renderRect.top + offsetY
-
-  //     actions.value.push({
-  //       date: new Date(),
-  //       type: 'fill',
-  //       action: { x ,y , color: color.value }
-  //     })
-
-  //     const eventClone = new PointerEvent(eventData.type, {
-  //       bubbles: true,
-  //       cancelable: true,
-  //       clientX: x,
-  //       clientY: y,
-  //       button: eventData.button,
-  //       buttons: eventData.buttons,
-  //       pointerType: eventData.pointerType,
-  //       pressure: eventData.pressure,
-  //       width: eventData.width,
-  //       height: eventData.height,
-  //       tiltX: eventData.tiltX,
-  //       tiltY: eventData.tiltY,
-  //       isPrimary: eventData.isPrimary,
-  //     })
-
-  //     renderFill(eventClone)
-  //   }
-  // })
-
-  // drawLayer.addEventListener('fillstart', (x: number, y: number) => {
-  //   if (!renderLayer.recordPaused) {
-  //     actions.value.push({
-  //       date: new Date(),
-  //       type: "fill",
-  //       action: { x: x, y: y, color: drawLayer.color } })
-
-  //   renderFill(x, y, drawLayer!.color)
-  //   }
-  // })
-
-  // drawLayer.addEventListener('fillend', () => {
-  //   drawLayer!.clear()
-  // })
+  renderLayer.addEventListener('dirty', () => (isDirty.value = true))
+  renderLayer.addEventListener('clean', () => (isDirty.value = false))
 
   drawLayer.addEventListener('strokerecorded', ({ stroke }: { stroke: Stroke }) => {
     const frameName = state.currentFrame?.frameName
@@ -255,39 +184,19 @@ onMounted(() => {
       type: 'stroke',
       stroke,
     })
-    //renderStroke(stroke)
-  })
-  drawLayer.addEventListener('strokeend', () => {
-    if (mode.value === 'draw' || mode.value === 'erase') {
-      drawLayer!.clear()
-    }
   })
 
-  // Initial setup
+  drawLayer.addEventListener('strokeend', () => {
+    if (mode.value === 'draw' || mode.value === 'erase') drawLayer!.clear()
+  })
+
   setMode(mode.value)
   updateColor()
   updateWeight()
   updateSmoothing()
 
-  // ***********I think this could be made reduntant by the action broadcast to all canvas viewers, may come back to it*/
-  // Handle confirmed actions recieved from the server
-  // const handleActionConfirmed = (confirmedAction) => {
-  //  console.log('Received confirmed action from server:', confirmedAction.type)
-
-  //  actions.value.push(confirmedAction)
-
-  //  if (confirmedAction.type === 'stroke') {
-  //    renderStroke(confirmedAction.action)
-  //    strokeCount.value++
-  //  } else if (confirmedAction.type === 'clear') {
-  //    renderLayer!.clear()
-  //    strokeCount.value = 0
-  //  }
-  //}
-
-  // Set up socket listeners
-
-  // Request all existing actions when component mounts
+  // IMPORTANT CHANGE: native WS cannot JSON-send ArrayBuffer reliably.
+  // So we convert blob -> base64 and send { png: base64 }.
   pngInterval = window.setInterval(() => {
     if (!renderLayer) return
 
@@ -295,94 +204,77 @@ onMounted(() => {
       if (!blob) return
 
       const arrayBuffer = await blob.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+
+      // convert to base64
+      let binary = ''
+      const chunkSize = 0x8000
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+      }
+      const base64 = btoa(binary)
 
       socket.emit('frame:png', {
         frameName: state.currentFrame?.frameName,
-        png: arrayBuffer,
+        png: base64,
       })
     }, 'image/png')
   }, 2000)
 })
 
-// Cleanup on unmount
 onUnmounted(() => {
-  // socket.off('drawing:action-confirmed', handleActionConfirmed)
   if (pngInterval !== null) {
     clearInterval(pngInterval)
     pngInterval = null
   }
 })
 
-// Control functions
 const updateColor = () => {
-  if (!renderLayer) return
+  if (!renderLayer || !drawLayer) return
   renderLayer.color = color.value
   drawLayer.color = color.value
 }
 
 const updateWeight = () => {
-  if (!renderLayer) return
+  if (!renderLayer || !drawLayer) return
   renderLayer.weight = weight.value
   drawLayer.weight = weight.value
 }
 
 const updateSmoothing = () => {
-  if (!renderLayer) return
+  if (!renderLayer || !drawLayer) return
   renderLayer.smoothing = smoothing.value
   drawLayer.smoothing = smoothing.value
 }
 
 const setMode = (newMode: 'draw' | 'erase' | 'fill') => {
   if (!renderLayer || !drawLayer) return
-
   mode.value = newMode
-
-  if (newMode === 'fill') {
-    renderLayer.mode = MODE_DISABLED
-    drawLayer.mode = MODE_FILL
-  } else if (newMode === 'draw') {
-    renderLayer.mode = MODE_DISABLED
-    drawLayer.mode = MODE_DRAW
-  } else {
-    renderLayer.mode = MODE_DISABLED
-    drawLayer.mode = MODE_ERASE
-  }
+  renderLayer.mode = MODE_DISABLED
+  drawLayer.mode = modeMap[newMode]
 }
 
-const clearCanvas = () => {
-  if (!renderLayer) return
-
-  // Send clear action to the server
-  // socket.emit('drawing:action', {
-  //   date: new Date(),
-  //   type: "clear",
-  //   action: null
-  // })
-}
-
-// This function is inspired by Atrament library example code: https://github.com/jakubfiala/atrament/tree/854c4c560ce2ff9d18788166fd24aa516cf05408?tab=readme-ov-file#fill-startend
 const renderStroke = ({ stroke }: { stroke: Stroke }) => {
   const originalSettings = {
     mode: mode.value,
     weight: renderLayer!.weight,
     smoothing: renderLayer!.smoothing,
     color: renderLayer!.color,
-    adaptiveSmoothing: renderLayer.adaptiveSmoothing,
+    adaptiveSmoothing: renderLayer!.adaptiveSmoothing,
   }
-  // Disable recording while rendering
+
   renderLayer!.recordPaused = true
   drawLayer!.recordPaused = true
 
-  // Preparing render canvas settings
   const segments = stroke.segments.slice()
   if (segments.length === 0) return
+
   renderLayer!.mode = modeMap[mode.value]
   renderLayer!.weight = stroke.weight
   renderLayer!.smoothing = stroke.smoothing
   renderLayer!.color = stroke.color ?? stroke.colour ?? '#000000'
   renderLayer!.adaptiveSmoothing = stroke.adaptiveSmoothing ?? stroke.adaptiveStroke ?? false
 
-  // Drawing the stroke
   const startSeg = segments.shift()
   if (!startSeg) return
   const startPoint = startSeg.point
@@ -392,17 +284,16 @@ const renderStroke = ({ stroke }: { stroke: Stroke }) => {
   while (segments.length > 0) {
     const seg = segments.shift()
     if (!seg) break
-    const { x, y } = renderLayer.draw(
+    const { x, y } = renderLayer!.draw(
       seg.point.x,
       seg.point.y,
       prevPoint.x,
       prevPoint.y,
       seg.pressure,
     )
-
     prevPoint = { x, y }
   }
-  renderLayer.endStroke(prevPoint.x, prevPoint.y)
+  renderLayer!.endStroke(prevPoint.x, prevPoint.y)
 
   renderLayer!.recordPaused = false
   drawLayer!.recordPaused = false
@@ -413,20 +304,6 @@ const renderStroke = ({ stroke }: { stroke: Stroke }) => {
   renderLayer!.color = originalSettings.color
   renderLayer!.adaptiveSmoothing = originalSettings.adaptiveSmoothing
 }
-
-// const renderFill = (x: number, y: number, fillColor: string) => {
-//   if (!renderLayer) return
-//   renderLayer!.recordPaused = true
-
-//   const ctx = renderLayer.context
-//   if (!ctx) {
-//     renderLayer!.recordPaused = false
-//     return
-//   }
-//   floodFill(ctx, Math.floor(x), Math.floor(y), hexToRgba(fillColor))
-
-//   renderLayer!.recordPaused = false
-// }
 </script>
 
 <style scoped>
