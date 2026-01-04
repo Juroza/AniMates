@@ -2,9 +2,9 @@
   "name": "animates",
   "version": "1.0.0",
   "type": "module",
-  "main": "proxy/server.js",
+  "main": "proxy/server.mjs",
   "scripts": {
-    "start": "node proxy/server.js"
+    "start": "node proxy/server.mjs"
   },
   "engines": {
     "node": "20.x"
