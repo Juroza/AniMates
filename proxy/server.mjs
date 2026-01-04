@@ -6,6 +6,10 @@ import http from "http";
 import cors from "cors";
 import axios from "axios";
 import { WebSocketServer } from "ws";
+import { createCanvas } from "canvas";
+import { JSDOM } from "jsdom";
+import Atrament from "atrament";
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -430,6 +434,81 @@ async function loadFrameSession(frameName) {
   return session;
 }
 
+/**
+ * Produce an image from the frame's action list by
+ * replaying all strokes/etc. on an Atrament canvas and returning a PNG buffer
+ * @param {Array} strokeRecords
+ * @param {number} width
+ * @param {number} height
+ * @returns {Buffer} PNG image buffer
+ */
+function getCanvasImage(
+  strokeRecords,
+  width = 1024,
+  height = 1024
+) {
+  // ---- minimal DOM for Atrament ----
+  const dom = new JSDOM(`<!DOCTYPE html><html><body></body></html>`);
+  global.window = dom.window;
+  global.document = dom.window.document;
+
+  // Create canvas
+  const canvas = createCanvas(width, height);
+
+  // Atrament expects canvas to be in the DOM
+  document.body.appendChild(canvas);
+
+  // Initialize Atrament
+  const atrament = new Atrament(canvas, {
+    width,
+    height,
+    color: "#000000",
+    weight: 4,
+    smoothing: 0.65,
+  });
+
+  // Replay actions in order
+  // TODO: add support for other actions as well like clear, and maybe also fill
+  for (const stroke of strokeRecords) {
+    const segments = stroke.segments.slice()
+    if (!segments || segments.length === 0) continue;
+
+    atrament.color = stroke.color ?? "#000000";
+    atrament.weight = stroke.weight ?? 4;
+    atrament.smoothing = stroke.smoothing ?? 0.65;
+    atrament.adaptiveSmoothing = stroke.adaptiveSmoothing ?? stroke.adaptiveStroke ?? false
+
+    // TODO: Include Erase mode support
+    // atrament.mode =
+    //   stroke.mode === "erase" ? "erase" : "draw";
+
+    // Begin stroke
+    const startSeg = segments.shift()
+    if (!startSeg) return
+    const startPoint = startSeg.point;
+    atrament.beginStroke(startPoint.x, startPoint.y)
+
+    let prevPoint = startPoint
+    while (segments.length > 0) {
+      const seg = segments.shift()
+      if (!seg) break
+      const { x, y } = atrament.draw(
+        seg.point.x,
+        seg.point.y,
+        prevPoint.x,
+        prevPoint.y,
+        seg.pressure,
+      )
+      prevPoint = { x, y }
+    }
+    atrament.endStroke(prevPoint.x, prevPoint.y)
+  }
+
+  // ---- export PNG ----
+  return canvas.toBuffer("image/png");
+}
+
+
 setInterval(async () => {
   const dirtySessions = [...frameSessions.values()].filter((s) => s.dirty);
 
@@ -518,33 +597,34 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
+      // COMMENTED OUT because image construction should be server-side
       // -------- frame:png --------
-      if (event === "frame:png") {
-        const { frameName, png } = data || {};
-        if (!frameName || !wsInRoom(ws, frameName)) return;
+      // if (event === "frame:png") {
+      //   const { frameName, png } = data || {};
+      //   if (!frameName || !wsInRoom(ws, frameName)) return;
 
-        try {
-          // client sends ArrayBuffer; when JSON-stringified it won't survive.
-          // so we expect base64 here for native WS.
-          // In the client rewrite below we send base64.
-          const buffer = Buffer.from(png, "base64");
+      //   try {
+      //     // client sends ArrayBuffer; when JSON-stringified it won't survive.
+      //     // so we expect base64 here for native WS.
+      //     // In the client rewrite below we send base64.
+      //     const buffer = Buffer.from(png, "base64");
 
-          const apiRes = await axios.post(
-            `${BACKEND_ENDPOINT}/upload-frame`,
-            buffer,
-            {
-              params: { filename: frameName },
-              headers: { "Content-Type": "image/png" },
-              maxBodyLength: Infinity,
-            }
-          );
+      //     const apiRes = await axios.post(
+      //       `${BACKEND_ENDPOINT}/upload-frame`,
+      //       buffer,
+      //       {
+      //         params: { filename: frameName },
+      //         headers: { "Content-Type": "image/png" },
+      //         maxBodyLength: Infinity,
+      //       }
+      //     );
 
-          console.log("Uploaded PNG:", apiRes.status);
-        } catch (err) {
-          console.error("PNG upload failed:", err?.message || err);
-        }
-        return;
-      }
+      //     console.log("Uploaded PNG:", apiRes.status);
+      //   } catch (err) {
+      //     console.error("PNG upload failed:", err?.message || err);
+      //   }
+      //   return;
+      // }
 
       // -------- drawing:action --------
       if (event === "drawing:action") {
@@ -614,3 +694,8 @@ wss.on("connection", (ws, req) => {
     console.error("ws error", err?.message || err);
   });
 });
+
+ 
+//TODO: function to convert canvas actions into an image
+//TODO: function to produce url for the image
+//MAYBE TODO: function to send image data for a frame to a client
