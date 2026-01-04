@@ -195,31 +195,32 @@ onMounted(() => {
   updateWeight()
   updateSmoothing()
 
-  // IMPORTANT CHANGE: native WS cannot JSON-send ArrayBuffer reliably.
+  // COMMENTED OUT because this should be performed server-side.
+  // important change: native WS cannot JSON-send ArrayBuffer reliably.
   // So we convert blob -> base64 and send { png: base64 }.
-  pngInterval = window.setInterval(() => {
-    if (!renderLayer) return
+  // pngInterval = window.setInterval(() => {
+  //   if (!renderLayer) return
 
-    renderLayer.canvas.toBlob(async (blob: Blob | null) => {
-      if (!blob) return
+  //   renderLayer.canvas.toBlob(async (blob: Blob | null) => {
+  //     if (!blob) return
 
-      const arrayBuffer = await blob.arrayBuffer()
-      const bytes = new Uint8Array(arrayBuffer)
+  //     const arrayBuffer = await blob.arrayBuffer()
+  //     const bytes = new Uint8Array(arrayBuffer)
 
-      // convert to base64
-      let binary = ''
-      const chunkSize = 0x8000
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
-      }
-      const base64 = btoa(binary)
+  //     // convert to base64
+  //     let binary = ''
+  //     const chunkSize = 0x8000
+  //     for (let i = 0; i < bytes.length; i += chunkSize) {
+  //       binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize))
+  //     }
+  //     const base64 = btoa(binary)
 
-      socket.emit('frame:png', {
-        frameName: state.currentFrame?.frameName,
-        png: base64,
-      })
-    }, 'image/png')
-  }, 2000)
+  //     socket.emit('frame:png', {
+  //       frameName: state.currentFrame?.frameName,
+  //       png: base64,
+  //     })
+  //   }, 'image/png')
+  // }, 2000)
 })
 
 onUnmounted(() => {
