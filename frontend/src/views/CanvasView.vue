@@ -181,6 +181,8 @@ onMounted(() => {
     if (!frameName) return
     if (mode.value === 'fill') return
 
+    stroke.mode = mode.value
+
     socket.emit('drawing:action', {
       frameName,
       date: new Date().toISOString(),
