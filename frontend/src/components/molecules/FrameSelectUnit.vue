@@ -31,6 +31,9 @@ const props = defineProps<{
 }>()
 const emit = defineEmits(['selected'])
 function select() {
+  if (props.frame?.frameName == 'i-guess-bro.jpg') {
+    return
+  }
   router.push({ name: 'canvas' })
   state.currentFrame = props.frame
   joinFrameSession()
