@@ -37,3 +37,7 @@ __screenshots__/
 
 test-results/
 playwright-report/
+
+# Azure Functions local secrets
+backend/local.settings.json
+local.settings.json

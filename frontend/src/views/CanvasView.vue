@@ -5,14 +5,9 @@
       <v-card-text>
         <div class="side-by-side">
           <div class="toolbar-container-left">
-            <v-btn
-              color=#ffffff
-              variant=elevated
-              @click="leaveCanvas"
-              id="back_button"
-            >
-              &lt;&lt;&lt; Back
-            </v-btn>
+            <!-- <div class="back-button">
+
+            </div> -->
             <div class="toolbar-left">
               <v-btn
                 :color="mode === 'draw' ? 'primary' : ''"
@@ -53,7 +48,6 @@
               width: displayWidth + 'px',
               height: displayHeight + 'px',
               '--canvas-scale': scale,
-              aspectRatio: projectWidth + ' / ' + projectHeight
             }"
           >
             <canvas
@@ -115,7 +109,6 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atrament'
 import { useSocket, joinFrameSession } from '../stores/socketState'
 import type { Stroke } from '../stores/socketState'
-import router from '../router'
 
 const wrapper = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -140,25 +133,12 @@ const MAX_DISPLAY_SIZE = 900
 const projectWidth = computed(() => state.currentProject!.width)
 const projectHeight = computed(() => state.currentProject!.height)
 
-const scale = ref(1)
-const displayWidth = ref(0)
-const displayHeight = ref(0)
+const scale = computed(() =>
+  Math.min(MAX_DISPLAY_SIZE / projectWidth.value, MAX_DISPLAY_SIZE / projectHeight.value, 1),
+)
 
-const recalcCanvasDisplay = () => {
-  const maxSize = Math.min(
-    window.innerWidth * 0.6,   // or whatever layout limit you want
-    window.innerHeight * 0.8,
-    MAX_DISPLAY_SIZE
-  )
-
-  const w = projectWidth.value
-  const h = projectHeight.value
-
-  scale.value = Math.min(maxSize / w, maxSize / h, 1)
-
-  displayWidth.value = Math.round(w * scale.value)
-  displayHeight.value = Math.round(h * scale.value)
-}
+const displayWidth = computed(() => projectWidth.value * scale.value)
+const displayHeight = computed(() => projectHeight.value * scale.value)
 
 const strokes = computed(() => state.currentFrame?.strokeRecord ?? [])
 
@@ -195,20 +175,17 @@ onMounted(() => {
   if (state.currentFrame?.frameName) joinFrameSession()
   if (!canvas.value || !drawingCanvas.value || !wrapper.value) return
 
-   renderLayer = new Atrament(canvas.value, {
+  renderLayer = new Atrament(canvas.value, {
     width: projectWidth.value,
     height: projectHeight.value,
-    color: color.value
+    color: color.value,
   })
 
   drawLayer = new Atrament(drawingCanvas.value, {
     width: projectWidth.value,
     height: projectHeight.value,
-    color: color.value
+    color: color.value,
   })
-
-  recalcCanvasDisplay()
-  window.addEventListener('resize', recalcCanvasDisplay)
 
   drawLayer.recordStrokes = true
   renderLayer.recordPaused = false
@@ -268,18 +245,11 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', recalcCanvasDisplay)
-  
   if (pngInterval !== null) {
     clearInterval(pngInterval)
     pngInterval = null
   }
 })
-
-function leaveCanvas() {
-  router.push({ name: 'timeline' })
-  socket.disconnect()
-}
 
 const updateColor = () => {
   if (!renderLayer || !drawLayer) return
@@ -321,7 +291,9 @@ const renderStroke = ({ stroke }: { stroke: Stroke }) => {
   const segments = stroke.segments.slice()
   if (segments.length === 0) return
 
-  renderLayer!.mode = modeMap[stroke.mode]
+  const safeMode = stroke.mode && stroke.mode in modeMap ? stroke.mode : 'draw'
+
+  renderLayer!.mode = modeMap[safeMode]
   renderLayer!.weight = stroke.weight
   renderLayer!.smoothing = stroke.smoothing
   renderLayer!.color = stroke.color ?? stroke.colour ?? '#000000'
