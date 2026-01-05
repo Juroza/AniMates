@@ -277,8 +277,8 @@ onUnmounted(() => {
 })
 
 function leaveCanvas() {
-  router.push({ name: 'timeline' })
   leaveFrameSession()
+  router.push({ name: 'timeline' })
 }
 
 const updateColor = () => {

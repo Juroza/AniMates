@@ -311,9 +311,11 @@ export function joinFrameSession() {
 }
 
 export function leaveFrameSession() {
+  const frameName = state.currentFrame?.frameName
+  if (!frameName) return
   setCurrentFrame(undefined)
 
-  send("leaveFrame", {})
+  send("leaveFrame", { frameName })
 }
 
 export function useSocket() {

@@ -440,9 +440,13 @@ function sessionIsEmpty(frameName) {
   return !set || set.size === 0;
 }
 
-function endEmptySession(frameName) {
-  frameSessions.delete(frameName);
-}
+// function endEmptySession(frameName) {
+//   setTimeout(() => {
+//     if (!sessionIsEmpty(frameName)) return;
+//     frameSessions.delete(frameName);
+//     console.log("ended session for", frameName)
+//   }, 5000);
+// }
 
 setInterval(async () => {
   const dirtySessions = [...frameSessions.values()].filter((s) => s.dirty);
@@ -459,6 +463,7 @@ setInterval(async () => {
         { headers: { "Content-Type": "application/json" } }
       );
       s.dirty = false;
+
     } catch (err) {
       console.error(
         "Failed to flush frame",
@@ -547,11 +552,6 @@ wss.on("connection", (ws, req) => {
             event: "presence:left",
             data: { socketId: "ws" },
           });
-        }
-
-        if (sessionIsEmpty(frameName)) {
-          endEmptySession(frameName)
-          console.log("ended session for", frameName)
         }
 
         return;
