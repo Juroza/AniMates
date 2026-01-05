@@ -5,9 +5,14 @@
       <v-card-text>
         <div class="side-by-side">
           <div class="toolbar-container-left">
-            <!-- <div class="back-button">
-
-            </div> -->
+            <v-btn
+              color=#ffffff
+              variant=elevated
+              @click="leaveCanvas"
+              id="back_button"
+            >
+              &lt;&lt;&lt; Back
+            </v-btn>
             <div class="toolbar-left">
               <v-btn
                 :color="mode === 'draw' ? 'primary' : ''"
@@ -102,6 +107,7 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atrament'
 import { useSocket, joinFrameSession } from '../stores/socketState'
 import type { Stroke } from '../stores/socketState'
+import router from '../router'
 
 const wrapper = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -233,6 +239,11 @@ onUnmounted(() => {
     pngInterval = null
   }
 })
+
+function leaveCanvas() {
+  router.push({ name: 'timeline' })
+  socket.disconnect()
+}
 
 const updateColor = () => {
   if (!renderLayer || !drawLayer) return
