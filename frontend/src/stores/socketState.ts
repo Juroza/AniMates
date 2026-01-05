@@ -310,6 +310,12 @@ export function joinFrameSession() {
   send('drawing:get-actions', { frameName })
 }
 
+export function leaveFrameSession() {
+  setCurrentFrame(undefined)
+
+  send("leaveFrame", {})
+}
+
 export function useSocket() {
   return {
     state,

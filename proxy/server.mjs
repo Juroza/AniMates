@@ -434,6 +434,16 @@ async function loadFrameSession(frameName) {
   return session;
 }
 
+function sessionIsEmpty(frameName) {
+  const roomName = roomFor(frameName);
+  const set = rooms.get(roomName);
+  return !set || set.size === 0;
+}
+
+function endEmptySession(frameName) {
+  frameSessions.delete(frameName);
+}
+
 setInterval(async () => {
   const dirtySessions = [...frameSessions.values()].filter((s) => s.dirty);
 
@@ -519,6 +529,31 @@ wss.on("connection", (ws, req) => {
           { event: "presence:joined", data: { socketId: "ws" } },
           ws
         );
+        return;
+      }
+
+      // -------- leaveFrame --------
+      if (event === "leaveFrame") {
+        // Leaving the session for the current frame
+        const frameName = ws.data?.frameName;
+        const roomName = ws.data?.roomName;
+        leaveRoom(ws);
+        ws.data.frameName = null
+
+        console.log("left", frameName);
+
+        if (frameName && roomName) {
+          broadcastRoom(roomName, {
+            event: "presence:left",
+            data: { socketId: "ws" },
+          });
+        }
+
+        if (sessionIsEmpty(frameName)) {
+          endEmptySession(frameName)
+          console.log("ended session for", frameName)
+        }
+
         return;
       }
 

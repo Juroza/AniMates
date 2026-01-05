@@ -113,7 +113,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atrament'
-import { useSocket, joinFrameSession } from '../stores/socketState'
+import { useSocket, joinFrameSession, leaveFrameSession } from '../stores/socketState'
 import type { Stroke } from '../stores/socketState'
 import router from '../router'
 
@@ -269,7 +269,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', recalcCanvasDisplay)
-  
+
   if (pngInterval !== null) {
     clearInterval(pngInterval)
     pngInterval = null
@@ -278,7 +278,7 @@ onUnmounted(() => {
 
 function leaveCanvas() {
   router.push({ name: 'timeline' })
-  socket.disconnect()
+  leaveFrameSession()
 }
 
 const updateColor = () => {
