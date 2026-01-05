@@ -1,7 +1,7 @@
 <template>
   <div class="drawing-container">
     <v-card class="mx-auto">
-      <v-card-title>Atrament Drawing Demo</v-card-title>
+      <v-card-title>Drawing</v-card-title>
       <v-card-text>
         <div class="side-by-side">
           <div class="toolbar-container-left">
