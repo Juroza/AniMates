@@ -8,7 +8,7 @@
       :hideInput="false"
       :inset="false"
     ></v-number-input>
-    <v-btn @click="createNewFrame" :disabled="newProjectFrameNumber == 0"
+    <v-btn @click="createNewFrame" :disabled="newProjectFrameNumber <= 0"
       ><v-icon icon="$plus" /> New Frame</v-btn
     >
     <v-btn @click="cancel">Cancel</v-btn>

@@ -46,20 +46,27 @@
               </div>
             </div>
           </div>
-          <div class="canvas-wrapper" ref="wrapper">
+          <div
+            class="canvas-wrapper"
+            ref="wrapper"
+            :style="{
+              width: displayWidth + 'px',
+              height: displayHeight + 'px',
+              '--canvas-scale': scale
+            }"
+          >
             <canvas
-              id="rendering"
               ref="canvas"
               class="canvas-layer"
-              :width="canvas_width"
-              :height="canvas_height"
+              :width="projectWidth"
+              :height="projectHeight"
             ></canvas>
+
             <canvas
-              id="drawing"
               ref="drawingCanvas"
               class="canvas-layer"
-              :width="canvas_width"
-              :height="canvas_height"
+              :width="projectWidth"
+              :height="projectHeight"
             ></canvas>
           </div>
 
@@ -125,6 +132,24 @@ const modeMap = {
 }
 
 const { state, socket } = useSocket()
+
+// canvas scaling
+const MAX_DISPLAY_SIZE = 900
+
+const projectWidth = computed(() => state.currentProject!.width)
+const projectHeight = computed(() => state.currentProject!.height)
+
+const scale = computed(() =>
+  Math.min(
+    MAX_DISPLAY_SIZE / projectWidth.value,
+    MAX_DISPLAY_SIZE / projectHeight.value,
+    1
+  )
+)
+
+const displayWidth = computed(() => projectWidth.value * scale.value)
+const displayHeight = computed(() => projectHeight.value * scale.value)
+
 const strokes = computed(() => state.currentFrame?.strokeRecord ?? [])
 
 watch(
@@ -160,20 +185,16 @@ onMounted(() => {
   if (state.currentFrame?.frameName) joinFrameSession()
   if (!canvas.value || !drawingCanvas.value || !wrapper.value) return
 
-  const wrapper_rect = wrapper.value.getBoundingClientRect()
-  canvas_width.value = Math.floor(wrapper_rect.width)
-  canvas_height.value = Math.floor(wrapper_rect.height)
-
-  renderLayer = new Atrament(canvas.value, {
-    width: canvas_width.value,
-    height: canvas_height.value,
-    color: color.value,
+   renderLayer = new Atrament(canvas.value, {
+    width: projectWidth.value,
+    height: projectHeight.value,
+    color: color.value
   })
 
   drawLayer = new Atrament(drawingCanvas.value, {
-    width: canvas_width.value,
-    height: canvas_height.value,
-    color: color.value,
+    width: projectWidth.value,
+    height: projectHeight.value,
+    color: color.value
   })
 
   drawLayer.recordStrokes = true
@@ -364,8 +385,6 @@ const renderStroke = ({ stroke }: { stroke: Stroke }) => {
 
 .canvas-wrapper {
   position: relative;
-  width: 800px;
-  height: 600px;
   max-width: 100%;
   margin: 20px 0;
   border: 2px solid #ddd;

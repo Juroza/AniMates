@@ -6,19 +6,14 @@
     <v-label>Resolution</v-label>
     <v-number-input
       v-model="projectWidth"
-      :reverse="false"
-      controlVariant="default"
       label="Width"
-      :hideInput="false"
-      :inset="false"
+      :disabled="!!props.project"
     ></v-number-input>
+
     <v-number-input
       v-model="projectHeight"
-      :reverse="false"
-      controlVariant="default"
       label="Height"
-      :hideInput="false"
-      :inset="false"
+      :disabled="!!props.project"
     ></v-number-input>
     <v-number-input
       v-model="projectFPS"
