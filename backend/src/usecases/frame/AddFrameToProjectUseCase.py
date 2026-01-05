@@ -18,7 +18,25 @@ class AddFrameToProjectUseCase():
             raise ProjectDoesNotExist("Project Doesn't exist")
         self.frameRepository.storeFrame(frame)
         projectRead.frames = projectRead.frames or []
-        projectRead.frames.append(frame.frameName)
+        
+        # Insert the new frame's name into the frames list at the correct position
+        inserted = False
+        for i in range(len(projectRead.frames)):
+            existing_frame_name = projectRead.frames[i]
+            existing_frame = self.frameRepository.loadFrameByName(existing_frame_name)
+            if existing_frame is None:
+                continue
+            if frame.frameNumber == existing_frame.frameNumber:
+                # Skip adding
+                inserted = True
+                break
+            if frame.frameNumber < existing_frame.frameNumber:
+                projectRead.frames.insert(i, frame.frameName)
+                inserted = True
+                break
+        if not inserted:
+            projectRead.frames.append(frame.frameName)
+            
         projectRead.frameCount = len(projectRead.frames) 
 
         self.projectRepository.updateProjectSettings(projectRead)
