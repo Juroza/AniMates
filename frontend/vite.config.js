@@ -1,4 +1,3 @@
-/// <reference types="vite/client" />
 import { fileURLToPath, URL } from 'node:url';
 import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
@@ -12,16 +11,12 @@ export default defineConfig({
         },
     },
     optimizeDeps: {
-        exclude: [
-            '@ffmpeg/ffmpeg',
-            '@ffmpeg/core',
-            '@ffmpeg/util',
-        ]
+        exclude: ['@ffmpeg/ffmpeg', '@ffmpeg/core', '@ffmpeg/util'],
     },
     worker: {
-        format: 'es'
+        format: 'es',
     },
     build: {
-        target: 'esnext'
-    }
+        target: 'esnext',
+    },
 });
