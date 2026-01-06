@@ -44,6 +44,7 @@
       </v-col>
       <ProjectList
         :projects="state.clientUser?.myProjects"
+        default-string="Press '+ New Project' to create a new project of your own"
         title="My Projects"
         :selected-project="selectedProject"
         @update:selected-project="selectedProject = selectedProject === $event ? '' : $event"
@@ -51,6 +52,7 @@
       </ProjectList>
       <ProjectList
         :projects="state.clientUser?.collabProjects"
+        default-string="Projects you are invited to will be displayed here"
         title="Collaboration Projects"
         :selected-project="selectedProject"
         @update:selected-project="selectedProject = selectedProject === $event ? '' : $event"
