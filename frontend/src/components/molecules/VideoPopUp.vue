@@ -2,6 +2,7 @@
   <v-card :title="props.project?.name">
     <video :src="videoURL" controls autoplay playsinline></video>
     <v-card-actions>
+      <v-btn @click="downloadVideo">Download</v-btn>
       <v-btn @click="emit('cancel')">Exit</v-btn>
     </v-card-actions>
   </v-card>
@@ -49,4 +50,15 @@ onMounted(async () => {
     console.error('Register failed:', err)
   }
 })
+
+// Function to download the video using the url
+function downloadVideo() {
+  if (!videoURL.value) return
+  const link = document.createElement('a')
+  link.href = videoURL.value
+  link.download = `${props.project?.name || 'video'}.mp4`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 </script>
