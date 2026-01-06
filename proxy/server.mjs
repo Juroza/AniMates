@@ -6,6 +6,53 @@ import http from "http";
 import cors from "cors";
 import axios from "axios";
 import { WebSocketServer } from "ws";
+import ffmpeg from "fluent-ffmpeg";
+import { PassThrough } from "stream";
+async function urlsToVideoPipe(urls, fps, resolution) {
+  const fileName = `render-${Date.now()}.mp4`;
+  const tmpPath = `/tmp/${fileName}`;
+  const imageStream = new PassThrough();
+
+  const command = ffmpeg()
+    .input(imageStream)
+    .inputOptions(["-f image2pipe", `-framerate ${fps}`, "-vcodec png"])
+    .complexFilter([
+      {
+        filter: "color",
+        options: {
+          color: "white",
+          size: resolution,
+        },
+        outputs: "bg",
+      },
+      {
+        filter: "overlay",
+        options: { shortest: 1 },
+        inputs: ["bg", "0:v"],
+        outputs: "out",
+      },
+    ])
+    .outputOptions(["-map [out]", "-pix_fmt yuv420p"])
+    .videoCodec("libx264")
+    .format("mp4")
+    .save(tmpPath);
+
+  const ffmpegDone = new Promise((resolve, reject) => {
+    command.on("end", resolve).on("error", reject);
+  });
+
+  for (const url of urls) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+    const buf = Buffer.from(await res.arrayBuffer());
+    imageStream.write(buf);
+  }
+  imageStream.end();
+
+  await ffmpegDone;
+
+  return tmpPath;
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -69,7 +116,14 @@ app.post("/login", async (req, res) => {
     }
   }
 });
-
+app.post("/render-video", async (req, res) => {
+  console.log("got render req");
+  const { urls, fps, resolution } = req.body;
+  const vidPath = await urlsToVideoPipe(urls, fps, resolution);
+  console.log(vidPath);
+  res.setHeader("Content-Type", "video/mp4");
+  res.sendFile(vidPath);
+});
 app.post("/get-users-project", async (req, res) => {
   try {
     console.log("Received login request in Express proxy");

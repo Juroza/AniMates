@@ -45,7 +45,12 @@
             <!-- EXPORT CONTROLS -->
             <ExportControls :frames="frames" />
 
-            <v-btn size="x-large" variant="text" class="buttons big-text-btn text-none">
+            <v-btn
+              @click="showVideoPopup = true"
+              size="x-large"
+              variant="text"
+              class="buttons big-text-btn text-none"
+            >
               [<v-icon icon="$play" class="mr-2" />Play]
             </v-btn>
           </div>
@@ -66,6 +71,10 @@
         "
       />
     </v-dialog>
+    <v-dialog max-width="500" v-model="showVideoPopup" content-class="pa-5">
+      <VideoPopUp @cancel="showVideoPopup = false" :frames="frames" :project="state.currentProject">
+      </VideoPopUp>
+    </v-dialog>
   </div>
   <div v-else>
     <h1 class="title">No project selected. Please go back to Home.</h1>
@@ -82,12 +91,14 @@ import { useSocket, getImageFramebyName, type Frame } from '../stores/socketStat
 import TimeLineSlider from '../components/organisms/TimeLineSlider.vue'
 import FrameOptionsDialog from '../components/molecules/FrameOptionsDialog.vue'
 import ExportControls from '../components/molecules/ExportControls.vue'
-
+import VideoPopUp from '../components/molecules/VideoPopUp.vue'
 const { state } = useSocket()
 const frames = ref<Frame[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+const videoURL = ref<string>('')
 const showOptionDialog = ref(false)
+const showVideoPopup = ref(false)
 async function loadFrames() {
   if (!state.currentProject) return
 
