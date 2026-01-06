@@ -69,3 +69,36 @@ class TestProject(unittest.TestCase):
         }
 
         self.assertEqual(normalized_actual, expected)
+    
+    def test_valid_get_public_project(self):
+        self.maxDiff=None
+        owner=User(id=None,username="Vera",password="wine")
+        self.userRepository.deleteUser(owner)
+        self.userRepository.registerUser(owner)
+        member1=User(id=None,username="Coco",password="massaStudio")
+        self.userRepository.deleteUser(member1)
+        self.userRepository.registerUser(member1)
+
+        projectColab= Project("Present Of Belgium",owner.username,False)
+        self.projectRepository.deleteProject(projectColab)
+        currentDateTime=datetime.datetime.now()
+        projectColab.setCreationDate(currentDateTime)
+        response= requests.post(self.LOCAL_DEV_Create_URL,json=projectColab.to_dict())
+        self.assertEqual(200,response.status_code)
+
+        response= requests.post(self.TEST_URL,json={'name':member1.username})
+        self.assertEqual(200,response.status_code)
+        print(response.json())
+        print(projectColab.to_dict())
+        actual = response.json()
+
+        normalized_actual = {
+            "my-projects": [without_id(p) for p in actual["my-projects"]],
+            "collab-projects": [without_id(p) for p in actual["collab-projects"]],
+        }
+        expected = {
+            "my-projects": [],
+            "collab-projects": [without_id(projectColab.to_dict())],
+        }
+
+        self.assertEqual(normalized_actual, expected)

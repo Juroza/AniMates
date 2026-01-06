@@ -64,7 +64,7 @@ class CosmosProjectRepository(ProjectRepository):
             project.setID(readProj['id'])
             myProjects.append(project)
         query_collab_result = list(self.container.query_items(
-        query=f"SELECT * FROM c WHERE ARRAY_CONTAINS(c.users,'{name}') AND c.owner!='{name}'",
+        query=f"SELECT * FROM c WHERE (ARRAY_CONTAINS(c.users,'{name}') AND c.owner!='{name}') OR (NOT c.private)",
         enable_cross_partition_query=True
         ))
         collabProjects=[]
