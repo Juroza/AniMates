@@ -3,7 +3,7 @@
     <h3>{{ props.title }}</h3>
     <v-divider :thickness="7"></v-divider>
     <v-list>
-      <v-list-item v-if="props.projects?.length === 0">
+      <v-list-item v-if="props.projects?.length === 0 || false">
         <v-list-item-title id="defaultString"
           ><b
             ><i>{{ props.defaultString }}</i></b
