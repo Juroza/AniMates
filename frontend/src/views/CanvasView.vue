@@ -105,10 +105,11 @@
 </template>
 <!-- =========================== CanvasView.vue (only the websocket bits changed) =========================== -->
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
+import { ref, onUnmounted, computed, watch, onMounted } from 'vue'
 import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atrament'
 import { useSocket, joinFrameSession, leaveFrameSession } from '../stores/socketState'
 import type { Stroke } from '../stores/socketState'
+import router from '../router'
 
 const wrapper = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
@@ -245,7 +246,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  window.removeEventListener('resize', recalcCanvasDisplay)
+  // window.removeEventListener('resize', recalcCanvasDisplay)
 
   if (pngInterval !== null) {
     clearInterval(pngInterval)
