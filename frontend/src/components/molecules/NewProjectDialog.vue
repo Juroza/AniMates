@@ -139,6 +139,7 @@ async function submitProject() {
         datetime_modified: props.project.datetime_modified,
         frameCount: 0,
         id: props.project.id,
+        frames: props.project.frames,
       })
       if (!response.data.result) {
         error.value = true

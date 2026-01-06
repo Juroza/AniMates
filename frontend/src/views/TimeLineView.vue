@@ -107,7 +107,7 @@ async function loadFrames() {
 
   try {
     console.log('Frame count:' + state.currentProject.frameCount)
-    if (state.currentProject.frameCount !== 0) {
+    if (state.currentProject.frames.length !== 0) {
       frames.value = await Promise.all(
         state.currentProject.frames.map((name) => getImageFramebyName(name)),
       )

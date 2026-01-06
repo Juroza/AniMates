@@ -23,7 +23,7 @@ def editProject(req: func.HttpRequest)->func.HttpResponse:
         project_data= project_data_full['project']
         userRepository=CosmosUserRepository(UserContainerProxy)
         projectRepository=CosmosProjectRepository(ProjectContainerProxy)
-        project= Project(project_data['name'],project_data['owner'],project_data['private'],project_data['users'],project_data['width'],project_data['height'],project_data['fps'],datetime.datetime.strptime(project_data['datetime_created'],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(project_data['datetime_modified'],"%Y-%m-%dT%H:%M:%S.%f"),project_data['frameCount'])
+        project= Project(project_data['name'],project_data['owner'],project_data['private'],project_data['users'],project_data['width'],project_data['height'],project_data['fps'],datetime.datetime.strptime(project_data['datetime_created'],"%Y-%m-%dT%H:%M:%S.%f"),datetime.datetime.strptime(project_data['datetime_modified'],"%Y-%m-%dT%H:%M:%S.%f"),project_data['frameCount'],project_data['frames'])
         project.setID(project_data_full['id'])
         editProjectUseCase= EditProjectUseCase(projectRepository,userRepository)
         if(editProjectUseCase.execute(project)):

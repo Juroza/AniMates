@@ -212,6 +212,7 @@ app.post("/edit-project", async (req, res) => {
       datetime_modified,
       frameCount,
       id,
+      frames,
     } = req.body;
 
     const apiRes = await axios.post(
@@ -228,6 +229,7 @@ app.post("/edit-project", async (req, res) => {
           datetime_created,
           datetime_modified,
           frameCount,
+          frames,
         },
         id: id,
       },
