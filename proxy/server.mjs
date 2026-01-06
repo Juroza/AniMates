@@ -16,7 +16,6 @@ const server = http.createServer(app);
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
-
 const BACKEND_ENDPOINT =
   process.env.BACKEND_ENDPOINT || "http://localhost:7071";
 
@@ -430,6 +429,20 @@ async function loadFrameSession(frameName) {
   return session;
 }
 
+function sessionIsEmpty(frameName) {
+  const roomName = roomFor(frameName);
+  const set = rooms.get(roomName);
+  return !set || set.size === 0;
+}
+
+// function endEmptySession(frameName) {
+//   setTimeout(() => {
+//     if (!sessionIsEmpty(frameName)) return;
+//     frameSessions.delete(frameName);
+//     console.log("ended session for", frameName)
+//   }, 5000);
+// }
+
 setInterval(async () => {
   const dirtySessions = [...frameSessions.values()].filter((s) => s.dirty);
 
@@ -515,6 +528,26 @@ wss.on("connection", (ws, req) => {
           { event: "presence:joined", data: { socketId: "ws" } },
           ws
         );
+        return;
+      }
+
+      // -------- leaveFrame --------
+      if (event === "leaveFrame") {
+        // Leaving the session for the current frame
+        const frameName = ws.data?.frameName;
+        const roomName = ws.data?.roomName;
+        leaveRoom(ws);
+        ws.data.frameName = null;
+
+        console.log("left", frameName);
+
+        if (frameName && roomName) {
+          broadcastRoom(roomName, {
+            event: "presence:left",
+            data: { socketId: "ws" },
+          });
+        }
+
         return;
       }
 
