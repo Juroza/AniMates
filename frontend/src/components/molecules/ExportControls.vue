@@ -5,16 +5,21 @@
 </template>
 
 <script setup lang="ts">
-import JSZip from 'jszip'
+import { FFmpeg } from '@ffmpeg/ffmpeg'
+import { fetchFile } from '@ffmpeg/util'
 import { saveAs } from 'file-saver'
-import type { Frame } from '../../stores/socketState'
+import { useSocket, getImageFramebyName, type Frame } from '../../stores/socketState'
+
+const { state } = useSocket()
 
 const props = defineProps<{
   frames: Frame[]
 }>()
 
+const ffmpeg = new FFmpeg()
+
 async function exportFrames() {
-  console.group('[Export ZIP]')
+  console.group('[Export MP4]')
 
   if (!props.frames || props.frames.length === 0) {
     console.error('No frames to export')
@@ -22,41 +27,58 @@ async function exportFrames() {
     return
   }
 
-  const zip = new JSZip()
-  let added = 0
+  if (!ffmpeg.loaded) {
+    console.log('Loading FFmpeg...')
+    await ffmpeg.load()
+  }
 
-  for (const frame of props.frames) {
-    if (!frame.url || !frame.frameName) {
+  let written = 0
+
+  for (let i = 0; i < props.frames.length; i++) {
+    const frame = props.frames[i]
+
+    if (!frame) return
+
+    if (!frame.url) {
       console.warn('Skipping invalid frame:', frame)
       continue
     }
 
     try {
-      const res = await fetch(frame.url)
-      if (!res.ok) throw new Error(`HTTP ${res.status}`)
-
-      const blob = await res.blob()
-      if (!blob.size) throw new Error('Empty blob')
-
-      zip.file(`${frame.frameName}.png`, blob)
-      added++
-
-      console.log(`Added ${frame.frameName}.png`)
+      const filename = `frame_${String(written).padStart(4, '0')}.png`
+      await ffmpeg.writeFile(filename, await fetchFile(frame.url))
+      written++
     } catch (err) {
-      console.error(`Failed to fetch ${frame.frameName}`, err)
+      console.error(`Failed to write frame ${i}`, err)
     }
   }
 
-  if (added === 0) {
-    console.error('ZIP aborted — no valid frames added')
+  console.log(`Encoding ${written} frames to MP4...`)
+
+  await ffmpeg.exec([
+    '-framerate', String(state!.currentProject?.fps),
+    '-i', 'frame_%04d.png',
+    '-c:v', 'libx264',
+    '-pix_fmt', 'yuv420p',
+    '-movflags', 'faststart',
+    'output.mp4'
+  ])
+
+  if (written === 0) {
+    console.error('No valid frames written')
     console.groupEnd()
     return
   }
 
-  const zipBlob = await zip.generateAsync({ type: 'blob' })
-  saveAs(zipBlob, 'frames_export.zip')
+  const data = await ffmpeg.readFile('output.mp4')
 
-  console.log(`ZIP generated with ${added} frame(s)`)
-  console.groupEnd()
+  const buffer = data instanceof Uint8Array
+    ? data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength)
+    : new TextEncoder().encode(data).buffer
+
+  saveAs(
+    new Blob([buffer], { type: 'video/mp4' }),
+    'frames_export.mp4'
+  )
 }
 </script>
