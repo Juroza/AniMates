@@ -8,7 +8,11 @@ import axios from "axios";
 import { WebSocketServer } from "ws";
 import ffmpeg from "fluent-ffmpeg";
 import { PassThrough } from "stream";
-ffmpeg.setFfmpegPath("/usr/bin/ffmpeg");
+import { execSync } from "child_process";
+
+const ffmpeg_path = execSync("which ffmpeg").toString().trim();
+
+ffmpeg.setFfmpegPath(ffmpeg_path);
 async function urlsToVideoPipe(urls, fps, resolution) {
   const fileName = `render-${Date.now()}.mp4`;
   const tmpPath = `/tmp/${fileName}`;
