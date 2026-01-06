@@ -16,11 +16,6 @@ const server = http.createServer(app);
 const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
 app.use(cors({ origin: FRONTEND_URL }));
 app.use(express.json());
-app.use((req, res, next) => {
-  res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
-  res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
-  next();
-});
 const BACKEND_ENDPOINT =
   process.env.BACKEND_ENDPOINT || "http://localhost:7071";
 
@@ -463,7 +458,6 @@ setInterval(async () => {
         { headers: { "Content-Type": "application/json" } }
       );
       s.dirty = false;
-
     } catch (err) {
       console.error(
         "Failed to flush frame",
@@ -543,7 +537,7 @@ wss.on("connection", (ws, req) => {
         const frameName = ws.data?.frameName;
         const roomName = ws.data?.roomName;
         leaveRoom(ws);
-        ws.data.frameName = null
+        ws.data.frameName = null;
 
         console.log("left", frameName);
 
