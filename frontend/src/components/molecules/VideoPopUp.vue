@@ -20,7 +20,19 @@ onMounted(async () => {
   try {
     if (!props.frames) return
     if (!props.project) return
-    const urls = props.frames.map((frame) => frame.url)
+
+    // Fill gaps between frames with the previous frame
+    const frames_with_gaps: Frame[] = []
+    for (const [index, frame] of props.frames.entries()) {
+      const nextFrameNumber = props.frames[index + 1]?.frameNumber || (frame.frameNumber + 1)
+      const gapSize = nextFrameNumber - frame.frameNumber
+
+      for (let i = 0; i < gapSize; i++) {
+        frames_with_gaps.push(frame)
+      }
+    }
+
+    const urls = frames_with_gaps.map((frame) => frame.url)
     const fps = props.project.fps
     const resolution = `${props.project.width}x${props.project.height}`
     const response = await axios.post(

@@ -30,7 +30,7 @@ async function exportFrames() {
       console.warn('Skipping invalid frame:', frame)
       continue
     }
-    const nextFrameNumber = props.frames[index + 1]?.frameNumber || frame.frameNumber + 1
+    const nextFrameNumber = props.frames[index + 1]?.frameNumber || (frame.frameNumber + 1)
     const gapSize = nextFrameNumber - frame.frameNumber
 
 
