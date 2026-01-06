@@ -20,7 +20,10 @@
       >
       </v-text-field>
       <v-row style="gap: 90px; align-items: center; /* vertical center */ justify-content: center">
-        <v-btn class="register-btn" @click="register"> Register </v-btn>
+        <v-btn class="register-btn" @click="register">
+          Register
+          <v-icon icon="$openInNew"></v-icon>
+        </v-btn>
         <v-btn class="login-btn" @click="login"> Login </v-btn></v-row
       >
     </v-col>
@@ -44,6 +47,7 @@ function register() {
   router.push('/register')
 }
 </script>
+
 <style lang="css" scoped>
 .input-container {
   justify-content: center;

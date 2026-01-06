@@ -10,6 +10,7 @@ import {
   mdiChevronLeft,
   mdiExport,
   mdiPlay,
+  mdiOpenInNew
 } from '@mdi/js'
 export default createVuetify({
   icons: {
@@ -23,6 +24,7 @@ export default createVuetify({
       left: mdiChevronLeft,
       export: mdiExport,
       play: mdiPlay,
+      openInNew: mdiOpenInNew,
     },
     sets: { mdi },
   },

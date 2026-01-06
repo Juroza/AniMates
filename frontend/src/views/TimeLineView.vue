@@ -94,19 +94,15 @@ async function loadFrames() {
   error.value = null
 
   try {
-    console.log('frame' + state.currentProject.frameCount)
-    if (state.currentProject.frameCount === 0) {
-      frames.value = await Promise.all([
-        getImageFramebyName(undefined),
-        getImageFramebyName(undefined),
-        getImageFramebyName(undefined),
-      ])
-    } else {
+    console.log('Frame count:' + state.currentProject.frameCount)
+    if (state.currentProject.frameCount !== 0) {
       frames.value = await Promise.all(
         state.currentProject.frames.map((name) => {
           return getImageFramebyName(name)
         }),
       )
+    } else {
+      showOptionDialog.value = true
     }
   } catch {
     error.value = 'iuyg'

@@ -25,7 +25,7 @@ import {
   setCurrentProject,
   useSocket,
 } from '../../stores/socketState'
-const newProjectFrameNumber = ref(0)
+const newProjectFrameNumber = ref(1)
 const error = ref(false)
 const props = defineProps<{
   project: Project | undefined
