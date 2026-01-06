@@ -25,11 +25,14 @@ async function exportFrames() {
   const zip = new JSZip()
   let added = 0
 
-  for (const frame of props.frames) {
+  for (const [index,frame] of props.frames.entries()) {
     if (!frame.url || !frame.frameName) {
       console.warn('Skipping invalid frame:', frame)
       continue
     }
+    const nextFrameNumber = props.frames[index + 1]?.frameNumber || frame.frameNumber + 1
+    const gapSize = nextFrameNumber - frame.frameNumber
+
 
     try {
       const res = await fetch(frame.url)
@@ -38,8 +41,11 @@ async function exportFrames() {
       const blob = await res.blob()
       if (!blob.size) throw new Error('Empty blob')
 
-      zip.file(`${frame.frameName}.png`, blob)
-      added++
+      // Adding the frame to the .zip, accounting for gaps as well
+      for (let i = 0; i < gapSize; i++) {
+        zip.file(`Frame_${frame.frameNumber + i}_(${frame.frameName}).png`, blob)
+        added++
+      }
 
       console.log(`Added ${frame.frameName}.png`)
     } catch (err) {
