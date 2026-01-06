@@ -41,6 +41,7 @@
     "@playwright/test": "^1.57.0",
     "@prettier/plugin-oxc": "^0.0.5",
     "@tsconfig/node24": "^24.0.3",
+    "@types/file-saver": "^2.0.7",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^24.10.4",
     "@vitejs/plugin-vue": "^6.0.2",
