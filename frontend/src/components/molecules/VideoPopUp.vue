@@ -1,0 +1,40 @@
+<template>
+  <v-card :title="props.project?.name">
+    <video :src="videoURL" controls autoplay playsinline></video>
+    <v-card-actions>
+      <v-btn @click="emit('cancel')">Exit</v-btn>
+    </v-card-actions>
+  </v-card>
+</template>
+<script setup lang="ts">
+import axios from 'axios'
+import { onMounted, ref } from 'vue'
+import { BACKEND_ENDPOINT, type Project, type Frame } from '../../stores/socketState'
+const emit = defineEmits(['cancel'])
+const props = defineProps<{
+  project: Project | undefined
+  frames: Frame[] | undefined
+}>()
+const videoURL = ref('')
+onMounted(async () => {
+  try {
+    if (!props.frames) return
+    if (!props.project) return
+    const urls = props.frames.map((frame) => frame.url)
+    const fps = props.project.fps
+    const resolution = `${props.project.width}x${props.project.height}`
+    const response = await axios.post(
+      BACKEND_ENDPOINT + '/render-video',
+      { urls, fps, resolution },
+      {
+        responseType: 'blob',
+      },
+    )
+
+    videoURL.value = URL.createObjectURL(response.data)
+    console.log(response.data)
+  } catch (err) {
+    console.error('Register failed:', err)
+  }
+})
+</script>

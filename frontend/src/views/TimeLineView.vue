@@ -38,15 +38,19 @@
           </div>
         </v-col>
 
-        <v-spacer></v-spacer>
+        <v-spacer />
 
         <v-col cols="auto">
           <div class="d-flex flex-column align-end">
-            <v-btn size="x-large" variant="text" class="buttons big-text-btn text-none">
-              [<v-icon icon="$export" class="mr-2" />Export]
-            </v-btn>
+            <!-- EXPORT CONTROLS -->
+            <ExportControls :frames="frames" />
 
-            <v-btn size="x-large" variant="text" class="buttons big-text-btn text-none">
+            <v-btn
+              @click="showVideoPopup = true"
+              size="x-large"
+              variant="text"
+              class="buttons big-text-btn text-none"
+            >
               [<v-icon icon="$play" class="mr-2" />Play]
             </v-btn>
           </div>
@@ -65,8 +69,11 @@
             loadFrames()
           }
         "
-      >
-      </FrameOptionsDialog>
+      />
+    </v-dialog>
+    <v-dialog max-width="500" v-model="showVideoPopup" content-class="pa-5">
+      <VideoPopUp @cancel="showVideoPopup = false" :frames="frames" :project="state.currentProject">
+      </VideoPopUp>
     </v-dialog>
   </div>
   <div v-else>
@@ -76,17 +83,22 @@
 </template>
 
 <script setup lang="ts">
-import { useSocket, getImageFramebyName, type Frame } from '../stores/socketState'
-import TimeLineSlider from '../components/organisms/TimeLineSlider.vue'
-import router from '../router'
 import { ref, watch } from 'vue'
-import FrameOptionsDialog from '../components/molecules/FrameOptionsDialog.vue'
+import router from '../router'
 
+import { useSocket, getImageFramebyName, type Frame } from '../stores/socketState'
+
+import TimeLineSlider from '../components/organisms/TimeLineSlider.vue'
+import FrameOptionsDialog from '../components/molecules/FrameOptionsDialog.vue'
+import ExportControls from '../components/molecules/ExportControls.vue'
+import VideoPopUp from '../components/molecules/VideoPopUp.vue'
 const { state } = useSocket()
 const frames = ref<Frame[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
+const videoURL = ref<string>('')
 const showOptionDialog = ref(false)
+const showVideoPopup = ref(false)
 async function loadFrames() {
   if (!state.currentProject) return
 
@@ -97,30 +109,27 @@ async function loadFrames() {
     console.log('Frame count:' + state.currentProject.frameCount)
     if (state.currentProject.frameCount !== 0) {
       frames.value = await Promise.all(
-        state.currentProject.frames.map((name) => {
-          return getImageFramebyName(name)
-        }),
+        state.currentProject.frames.map((name) => getImageFramebyName(name)),
       )
     } else {
       showOptionDialog.value = true
     }
   } catch {
-    error.value = 'iuyg'
+    error.value = 'Failed to load frames'
     frames.value = []
   } finally {
     loading.value = false
   }
 }
-watch(
-  () => state.currentProject?.name,
-  () => loadFrames(),
-  { immediate: true },
-)
+
+watch(() => state.currentProject?.name, loadFrames, { immediate: true })
 </script>
-<style lang="css" scoped>
+
+<style scoped>
 .title {
   text-decoration: underline;
 }
+
 .underlined-btn {
   text-decoration: underline;
   font-family: 'Roboto Mono';
@@ -128,6 +137,7 @@ watch(
   font-size: xx-large;
   margin: 20px;
 }
+
 .anim-button {
   font-family: 'Roboto Mono';
   font-weight: 400;
@@ -137,13 +147,7 @@ watch(
   display: flex;
   align-items: center;
 }
-.bottom-bar {
-  margin-bottom: 1;
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  padding: 16px 0;
-}
+
 .buttons {
   font-family: 'Roboto Mono';
   font-weight: 400;
@@ -153,9 +157,7 @@ watch(
   min-height: 0 !important;
   padding: 0 !important;
 }
-.buttons :deep(.v-btn__content) {
-  line-height: 1 !important;
-}
+
 .big-text-btn {
   height: auto !important;
   min-height: 0 !important;
