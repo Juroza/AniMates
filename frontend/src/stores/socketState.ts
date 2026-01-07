@@ -284,7 +284,7 @@ on('project:current-users', (payload: any) => {
   if (payload.projectName !== state.currentProject.name) return
 
   // Convert plain object to Map
-  const userMap = new Map(Object.entries(payload.userMap))
+  const userMap = new Map<string, number>(Object.entries(payload.userMap))
   console.log(`Current users on project ${state.currentProject.name}:`, userMap)
   setCurrentUsers(userMap)
 })
