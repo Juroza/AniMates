@@ -13,6 +13,7 @@ import { execSync } from "child_process";
 const ffmpeg_path = execSync("which ffmpeg").toString().trim();
 
 ffmpeg.setFfmpegPath(ffmpeg_path);
+
 async function urlsToVideoPipe(urls, fps, resolution) {
   const fileName = `render-${Date.now()}.mp4`;
   const tmpPath = `/tmp/${fileName}`;

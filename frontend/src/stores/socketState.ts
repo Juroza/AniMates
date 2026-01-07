@@ -72,6 +72,20 @@ export type User = {
   id: string | undefined
 }
 
+export type onionSettings = {
+  enabled: boolean,
+  prev: number,
+  next: number,
+  opacity: number
+}
+
+export const defaultOnionSettings: onionSettings = {
+  enabled: false,
+  prev: 1,
+  next: 1,
+  opacity: 50,
+}
+
 export interface getAllUsersResponse {
   id: string
   username: string
@@ -89,6 +103,7 @@ type clientStateData = {
   clientUser: User | undefined
   currentProject: Project | undefined
   currentFrame: Frame | undefined
+  onionSettings: onionSettings
 }
 
 const state: clientStateData = reactive({
@@ -96,6 +111,7 @@ const state: clientStateData = reactive({
   clientUser: undefined,
   currentProject: undefined,
   currentFrame: undefined,
+  onionSettings: { ...defaultOnionSettings }
 })
 
 export function setCurrentFrame(frame: Frame | undefined) {

@@ -135,8 +135,12 @@ import { useSocket, joinFrameSession, leaveFrameSession } from '../stores/socket
 import type { Stroke } from '../stores/socketState'
 import router from '../router'
 import OnionSkinPopup from '../components/molecules/OnionSkinPopUp.vue'
-import type { Frame } from '../stores/socketState'
+import type { Frame, onionSettings } from '../stores/socketState'
 import { getImageFramebyName } from '../stores/socketState'
+import { stat } from 'fs'
+
+
+const { state, socket } = useSocket()
 
 const frames = ref<Frame[]>([])
 
@@ -144,13 +148,24 @@ const wrapper = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const drawingCanvas = ref<HTMLCanvasElement | null>(null)
 
-const showOnionPopup = ref(false)
-const onion = ref({
-  enabled: false,
-  prev: 0,
-  next: 0,
-  opacity: 100,
+const onion = computed<onionSettings>({
+  get() {
+    return (
+      state.onionSettings ?? {
+        enabled: false,
+        prev: 1,
+        next: 1,
+        opacity: 50,
+      }
+    )
+  },
+  set(v) {
+    state.onionSettings = { ...v }
+  },
 })
+
+const showOnionPopup = ref(false)
+
 const onionCanvas = ref<HTMLCanvasElement | null>(null)
 
 const currentFrameIndex = computed(() => {
@@ -170,7 +185,6 @@ const modeMap = {
   disabled: MODE_DISABLED,
 }
 
-const { state, socket } = useSocket()
 
 // canvas scaling
 const MAX_DISPLAY_SIZE = 900
@@ -220,12 +234,22 @@ watch(
   { deep: true, immediate: true },
 )
 
+const onionReady = computed(() => {
+  return (
+    onion.value.enabled &&
+    onionCanvas.value &&
+    frames.value.length > 0 &&
+    currentFrameIndex.value !== -1
+  )
+})
+
 watch(
-  () => [onion.value.enabled, onion.value.prev, onion.value.next, onion.value.opacity],
-  () => {
-    if (onion.value.enabled) renderOnionSkin()
+  onionReady,
+  (ready) => {
+    if (ready) renderOnionSkin()
     else clearOnionSkin()
   },
+  { immediate: true },
 )
 
 watch(currentFrameIndex, () => {
@@ -416,8 +440,9 @@ onUnmounted(() => {
   }
 })
 
-function applyOnionSettings(v: { enabled: boolean; prev: number; next: number; opacity: number }) {
+function applyOnionSettings(v: onionSettings) {
   onion.value = v
+
   if (v.enabled) renderOnionSkin()
   else clearOnionSkin()
 }

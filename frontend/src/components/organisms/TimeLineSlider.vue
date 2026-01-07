@@ -2,7 +2,7 @@
   <v-container fluid class="pa-0 ma-0 carousel-wrapper">
     <v-row align="center" no-gutters class="carousel-row">
       <v-col cols="auto" class="z-nav">
-        <v-btn icon :disabled="atStart" @click="scrollByItems(-1)" variant="text" density="compact">
+        <v-btn icon @click="scrollByItems(-1)" variant="text" density="compact">
           <v-icon icon="$left" />
         </v-btn>
       </v-col>
@@ -30,7 +30,7 @@
       </v-col>
 
       <v-col cols="auto" class="z-nav">
-        <v-btn icon :disabled="atEnd" @click="scrollByItems(1)" variant="text" density="compact">
+        <v-btn icon  @click="scrollByItems(1)" variant="text" density="compact">
           <v-icon icon="$right" />
         </v-btn>
       </v-col>
@@ -163,8 +163,12 @@ function scrollByItems(dir: number) {
 onMounted(async () => {
   await nextTick()
   updateState()
-  window.addEventListener('resize', updateState)
+
+  requestAnimationFrame(() => {
+    updateState()
+  })
 })
+
 onBeforeUnmount(() => window.removeEventListener('resize', updateState))
 </script>
 
@@ -176,7 +180,8 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateState))
 }
 
 .carousel-row {
-  height: 200px; /* Adjust this to match your component height */
+  height: auto;
+  min-height: 100px; /* Adjust this to match your component height */
   margin: 0 !important;
 }
 
@@ -187,9 +192,9 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateState))
   overflow-y: visible;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
-  padding: 10px 0;
+  padding: 20px 0;
   -webkit-overflow-scrolling: touch;
-  height: 100%;
+  height: 700px;
 }
 
 .frame-strip::-webkit-scrollbar {
