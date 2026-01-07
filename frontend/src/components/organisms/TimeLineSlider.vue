@@ -30,7 +30,7 @@
       </v-col>
 
       <v-col cols="auto" class="z-nav">
-        <v-btn icon  @click="scrollByItems(1)" variant="text" density="compact">
+        <v-btn icon @click="scrollByItems(1)" variant="text" density="compact">
           <v-icon icon="$right" />
         </v-btn>
       </v-col>
@@ -194,7 +194,7 @@ onBeforeUnmount(() => window.removeEventListener('resize', updateState))
   scrollbar-width: none;
   padding: 20px 0;
   -webkit-overflow-scrolling: touch;
-  height: 700px;
+  height: 100%;
 }
 
 .frame-strip::-webkit-scrollbar {
