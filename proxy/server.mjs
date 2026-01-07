@@ -465,7 +465,7 @@ function broadcastRoom(roomName, messageObj, exceptWs = null) {
   }
 }
 
-// ===================== in-memory frame sessions (same logic) =====================
+// ===================== in-memory frame sessions =====================
 const frameSessions = new Map();
 
 async function loadFrameSession(frameName) {
@@ -494,6 +494,23 @@ function sessionIsEmpty(frameName) {
   const roomName = roomFor(frameName);
   const set = rooms.get(roomName);
   return !set || set.size === 0;
+}
+
+// A function to retrieve all users on a project, and the frames they are editing
+async function getUsersOnProject(projectName) {
+  const userMap = new Map();
+
+  for (const [_, clients] of rooms.entries()) {
+    for (const ws of clients) {
+      if (ws.data?.projectName === projectName) {
+        const session = await loadFrameSession(ws.data?.frameName);
+        const frameNumber = session.frameNumber;
+        userMap.set(ws.data?.username, frameNumber);
+      }
+    }
+  }
+
+  return userMap;
 }
 
 // function endEmptySession(frameName) {
@@ -612,6 +629,22 @@ wss.on("connection", (ws, req) => {
         return;
       }
 
+      // -------- project:get-current-users --------
+      if (event === "project:get-current-users") {
+        const { projectName } = data || {};
+        if (!projectName) return;
+
+        const userMap = getUsersOnProject(projectName)
+        safeSend(ws, {
+          event: "project:current-users",
+          data: {
+            projectName,
+            userMap,
+          }
+        });
+        return;
+      }
+
       // -------- frame:png --------
       if (event === "frame:png") {
         const { frameName, png } = data || {};
@@ -708,3 +741,4 @@ wss.on("connection", (ws, req) => {
     console.error("ws error", err?.message || err);
   });
 });
+
