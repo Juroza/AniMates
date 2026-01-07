@@ -12,6 +12,7 @@
       </v-text-field>
       <v-text-field
         label="Password"
+        class="mb-4"
         :model-value="props.password"
         @update:model-value="emit('update:password', $event)"
         :error="props.error"
