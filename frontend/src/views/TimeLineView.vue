@@ -95,6 +95,7 @@
     </v-dialog>
     <v-dialog max-width="500" v-model="showCurrentUsersDialog" content-class="pa-5">
       <CurrentUsersDialog
+        :userMap="userMap"
         @close="showCurrentUsersDialog = false"
       />
     </v-dialog>
@@ -119,6 +120,7 @@ import { ref, watch } from 'vue'
 import router from '../router'
 
 import { useSocket, getImageFramebyName, type Frame } from '../stores/socketState'
+import { getUsersOnProject } from '../stores/socketState'
 import { setCurrentFrame } from '../stores/socketState'
 
 import TimeLineSlider from '../components/organisms/TimeLineSlider.vue'
@@ -138,6 +140,8 @@ const showInfoDialog = ref(false)
 const showCurrentUsersDialog = ref(false)
 const showHelpDialog = ref(false)
 const showVideoPopup = ref(false)
+const userMap = ref<Map<string, (number|undefined)>>(new Map())
+// const allUsers = ref<string[]>([])
 async function loadFrames() {
   if (!state.currentProject) return
 
@@ -161,10 +165,59 @@ async function loadFrames() {
   }
 }
 
-watch(() => state.currentProject?.name, loadFrames, { immediate: true })
+watch(
+  () => state.currentProject?.name,
+  () => {
+    loadFrames()
+    getUsersOnProject()
+    // getAllUsers()
+  },
+  { immediate: true })
+
+watch(
+  () => state.currentUsers,
+  () => {
+    userMap.value = computeUserMap()
+  },
+  { deep: true }
+)
 
 function onFrameSelected(index: number) {
   setCurrentFrame(frames.value[index])
+}
+
+// async function getAllUsers() {
+//   try {
+//     const response = await axios.post<getAllUsersResponse[]>(BACKEND_ENDPOINT + '/get-all-users')
+//     if (!response.data) {
+//       console.log('rong')
+//     } else {
+//       console.log('right')
+//       allUsers.value.push(...response.data.map((user) => user.username))
+//     }
+
+//   } catch (err) {
+//     console.error(err)
+//   }
+// }
+
+function computeUserMap() {
+  // const onlineUsers = state.currentUsers || new Map()
+  // const allUsersMap: Map<string, number|undefined> = new Map()
+
+  // for (const user of allUsers.value) {
+  //   if (onlineUsers?.has(user)) {
+  //     allUsersMap.set(user, onlineUsers.get(user))
+  //   } else {
+  //     allUsersMap.set(user, undefined)
+  //   }
+  // }
+
+  // userMap.value = allUsersMap
+  // return onlineUsers
+  // Create a new Map to ensure Vue reactivity
+  if (!state.currentUsers) return new Map()
+  return new Map(state.currentUsers)
 }
 </script>
 

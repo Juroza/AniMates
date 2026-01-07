@@ -502,15 +502,15 @@ async function getUsersOnProject(projectName) {
 
   for (const [_, clients] of rooms.entries()) {
     for (const ws of clients) {
-      if (ws.data?.projectName === projectName) {
-        const session = await loadFrameSession(ws.data?.frameName);
-        const frameNumber = session.frameNumber;
-        userMap.set(ws.data?.username, frameNumber);
-      }
+      const session = await loadFrameSession(ws.data?.frameName);
+      if (session.projectName === projectName)
+        userMap.set(ws.data?.username, session.frameNumber);
+
     }
   }
 
-  return userMap;
+  // Convert Map to plain object for JSON serialization
+  return Object.fromEntries(userMap);
 }
 
 // function endEmptySession(frameName) {
@@ -553,7 +553,7 @@ setInterval(async () => {
 // Outgoing messages follow same pattern.
 
 wss.on("connection", (ws, req) => {
-  ws.data = { frameName: null, roomName: null };
+  ws.data = { username: null, frameName: null, roomName: null };
 
   console.log("ws connected");
 
@@ -573,7 +573,7 @@ wss.on("connection", (ws, req) => {
 
       // -------- joinFrame --------
       if (event === "joinFrame") {
-        const { frameName } = data || {};
+        const { frameName, username } = data || {};
         if (!frameName) return;
 
         // leave previous
@@ -581,6 +581,7 @@ wss.on("connection", (ws, req) => {
           leaveRoom(ws);
         }
 
+        ws.data.username = username;
         ws.data.frameName = frameName;
         const roomName = roomFor(frameName);
         joinRoom(ws, roomName);
@@ -634,7 +635,7 @@ wss.on("connection", (ws, req) => {
         const { projectName } = data || {};
         if (!projectName) return;
 
-        const userMap = getUsersOnProject(projectName)
+        const userMap = await getUsersOnProject(projectName)
         safeSend(ws, {
           event: "project:current-users",
           data: {

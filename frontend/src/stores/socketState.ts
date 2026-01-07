@@ -267,8 +267,10 @@ on('project:current-users', (payload: any) => {
   if (!state.currentProject) return
   if (payload.projectName !== state.currentProject.name) return
 
-  console.log(`Current users on project ${state.currentProject.name}:`, payload.userMap)
-  setCurrentUsers(payload.userMap)
+  // Convert plain object to Map
+  const userMap = new Map(Object.entries(payload.userMap))
+  console.log(`Current users on project ${state.currentProject.name}:`, userMap)
+  setCurrentUsers(userMap)
 })
 
 on('frameDataRetrieval', (payload: any) => {
@@ -323,9 +325,10 @@ export function joinFrameSession() {
   if (!state.currentFrame) return
 
   const frameName = state.currentFrame.frameName
+  const username = state.clientUser?.username
   setCurrentFrameStrokeRecord([])
 
-  send('joinFrame', { frameName })
+  send('joinFrame', { frameName, username })
   send('drawing:get-actions', { frameName })
 }
 
