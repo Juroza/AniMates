@@ -33,7 +33,7 @@
               >
                 🪣 Fill
               </v-btn> -->
-              <v-btn color="warning" variant="outlined" id="clear_button"> 🗑️ Clear </v-btn>
+              <v-btn color="warning" variant="outlined" id="clear_button" @click="clearCanvas"> 🗑️ Clear </v-btn>
               <v-btn
                 color="secondary"
                 variant="outlined"
@@ -475,6 +475,15 @@ const setMode = (newMode: 'draw' | 'erase' | 'fill' | 'disabled') => {
   mode.value = newMode
   renderLayer.mode = MODE_DISABLED
   drawLayer.mode = modeMap[newMode]
+}
+
+const clearCanvas = () => {
+  if (!renderLayer || !drawLayer) return
+  socket.emit('drawing:action', {
+    frameName: state.currentFrame?.frameName,
+    date: new Date().toISOString(),
+    type: 'clear'
+  })
 }
 
 const renderStroke = ({ stroke }: { stroke: Stroke }) => {
