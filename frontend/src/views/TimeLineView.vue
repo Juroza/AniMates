@@ -1,7 +1,7 @@
 <template>
   <div v-if="state.currentProject">
     <h1 class="title">Project: {{ state.currentProject.name }}</h1>
-    <TimeLineSlider :frames="frames" />
+    <TimeLineSlider :frames="frames" @select="onFrameSelected" />
     <v-footer app class="pa-0 ma-0" color="transparent">
       <v-row no-gutters class="w-100 px-4 pb-8" align="end">
         <v-col cols="auto">
@@ -87,6 +87,7 @@ import { ref, watch } from 'vue'
 import router from '../router'
 
 import { useSocket, getImageFramebyName, type Frame } from '../stores/socketState'
+import { setCurrentFrame } from '../stores/socketState'
 
 import TimeLineSlider from '../components/organisms/TimeLineSlider.vue'
 import FrameOptionsDialog from '../components/molecules/FrameOptionsDialog.vue'
@@ -123,6 +124,10 @@ async function loadFrames() {
 }
 
 watch(() => state.currentProject?.name, loadFrames, { immediate: true })
+
+function onFrameSelected(index: number) {
+  setCurrentFrame(frames.value[index])
+}
 </script>
 
 <style scoped>

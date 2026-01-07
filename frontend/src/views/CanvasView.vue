@@ -5,12 +5,7 @@
       <v-card-text>
         <div class="side-by-side">
           <div class="toolbar-container-left">
-            <v-btn
-              color=#ffffff
-              variant=elevated
-              @click="leaveCanvas"
-              id="back_button"
-            >
+            <v-btn color="#ffffff" variant="elevated" @click="leaveCanvas" id="back_button">
               &lt;&lt;&lt; Back
             </v-btn>
             <div class="toolbar-left">
@@ -39,7 +34,14 @@
                 🪣 Fill
               </v-btn> -->
               <v-btn color="warning" variant="outlined" id="clear_button"> 🗑️ Clear </v-btn>
-
+              <v-btn
+                color="secondary"
+                variant="outlined"
+                class="text-none"
+                @click="showOnionPopup = true"
+              >
+                🧅 Onion Skin
+              </v-btn>
               <div class="info-section">
                 <p><strong>Status:</strong> {{ isDirty ? '✏️ Drawing...' : '⭐ Ready' }}</p>
                 <p><strong>Strokes:</strong> {{ strokeCount }}</p>
@@ -53,7 +55,7 @@
               width: displayWidth + 'px',
               height: displayHeight + 'px',
               '--canvas-scale': scale,
-              aspectRatio: projectWidth + ' / ' + projectHeight
+              aspectRatio: projectWidth + ' / ' + projectHeight,
             }"
           >
             <canvas
@@ -62,6 +64,13 @@
               :width="projectWidth"
               :height="projectHeight"
             ></canvas>
+
+            <canvas
+              ref="onionCanvas"
+              class="canvas-layer"
+              :width="projectWidth"
+              :height="projectHeight"
+            />
 
             <canvas
               ref="drawingCanvas"
@@ -108,6 +117,15 @@
       </v-card-text>
     </v-card>
   </div>
+  <OnionSkinPopup
+    v-model="showOnionPopup"
+    :frames-behind="currentFrameIndex"
+    :frames-ahead="
+      Math.max(0, (state.currentProject?.frames.length ?? 1) - (currentFrameIndex) - 1)
+    "
+    :value="onion"
+    @apply="applyOnionSettings"
+  />
 </template>
 <!-- =========================== CanvasView.vue (only the websocket bits changed) =========================== -->
 <script setup lang="ts">
@@ -116,10 +134,30 @@ import Atrament, { MODE_DRAW, MODE_ERASE, MODE_FILL, MODE_DISABLED } from 'atram
 import { useSocket, joinFrameSession, leaveFrameSession } from '../stores/socketState'
 import type { Stroke } from '../stores/socketState'
 import router from '../router'
+import OnionSkinPopup from '../components/molecules/OnionSkinPopUp.vue'
+import type { Frame } from '../stores/socketState'
+import { getImageFramebyName } from '../stores/socketState'
+
+const frames = ref<Frame[]>([])
 
 const wrapper = ref<HTMLDivElement | null>(null)
 const canvas = ref<HTMLCanvasElement | null>(null)
 const drawingCanvas = ref<HTMLCanvasElement | null>(null)
+
+const showOnionPopup = ref(false)
+const onion = ref({
+  enabled: false,
+  prev: 0,
+  next: 0,
+  opacity: 100,
+})
+const onionCanvas = ref<HTMLCanvasElement | null>(null)
+
+const currentFrameIndex = computed(() => {
+  if (!state.currentProject || !state.currentFrame) return 0
+  return state.currentProject.frames.findIndex((name) => name === state.currentFrame!.frameName)
+})
+
 let pngInterval: number | null = null
 
 let renderLayer: InstanceType<typeof Atrament> | null = null
@@ -146,9 +184,9 @@ const displayHeight = ref(0)
 
 const recalcCanvasDisplay = () => {
   const maxSize = Math.min(
-    window.innerWidth * 0.6,   // or whatever layout limit you want
+    window.innerWidth * 0.6, // or whatever layout limit you want
     window.innerHeight * 0.8,
-    MAX_DISPLAY_SIZE
+    MAX_DISPLAY_SIZE,
   )
 
   const w = projectWidth.value
@@ -182,6 +220,27 @@ watch(
   { deep: true, immediate: true },
 )
 
+watch(
+  () => [onion.value.enabled, onion.value.prev, onion.value.next, onion.value.opacity],
+  () => {
+    if (onion.value.enabled) renderOnionSkin()
+    else clearOnionSkin()
+  },
+)
+
+watch(currentFrameIndex, () => {
+  if (onion.value.enabled) renderOnionSkin()
+})
+
+watch(
+  () => state.currentProject?.name,
+  async () => {
+    if (!state.currentProject) return
+    frames.value = await Promise.all(state.currentProject.frames.map(getImageFramebyName))
+  },
+  { immediate: true },
+)
+
 const canvas_width = ref<number>(0)
 const canvas_height = ref<number>(0)
 const color = ref<string>('#000000')
@@ -191,20 +250,101 @@ const mode = ref<'draw' | 'erase' | 'fill' | 'disabled'>('draw')
 const isDirty = ref<boolean>(false)
 const strokeCount = ref<number>(0)
 
+async function renderOnionSkin() {
+  if (!onion.value.enabled) return
+  if (!onionCanvas.value) return
+  if (!frames.value.length) return
+
+  const ctx = onionCanvas.value.getContext('2d')
+  if (!ctx) return
+
+  ctx.clearRect(0, 0, projectWidth.value, projectHeight.value)
+
+  const currentIndex = currentFrameIndex.value
+  const baseAlpha = onion.value.opacity / 100
+
+  const onionAlpha = (step: number, max: number) => {
+    if (max <= 1) return baseAlpha
+    const t = (step - 1) / max
+    return baseAlpha * Math.pow(1 - t, 1.5)
+  }
+
+  // PREVIOUS frames → GREEN
+  for (let i = 1; i <= onion.value.prev; i++) {
+    const idx = currentIndex - i
+    if (idx < 0) break
+    const frame = frames.value[idx]
+    if (!frame) continue
+
+    await drawFrame(ctx, frame, 'green', onionAlpha(i, onion.value.prev))
+  }
+
+  // FUTURE frames → RED
+  for (let i = 1; i <= onion.value.next; i++) {
+    const idx = currentIndex + i
+    if (idx >= frames.value.length) break
+    const frame = frames.value[idx]
+    if (!frame) continue
+
+    await drawFrame(ctx, frame, 'red', onionAlpha(i, onion.value.next))
+  }
+}
+
+async function drawFrame(
+  ctx: CanvasRenderingContext2D,
+  frame: Frame,
+  tint: 'green' | 'red',
+  alpha: number,
+) {
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+  img.src = frame.url
+
+  try {
+    await img.decode()
+  } catch {
+    return
+  }
+  const off = document.createElement('canvas')
+  off.width = projectWidth.value
+  off.height = projectHeight.value
+  const octx = off.getContext('2d')
+  if (!octx) return
+
+  octx.drawImage(img, 0, 0)
+
+  octx.globalCompositeOperation = 'source-atop'
+  octx.fillStyle = tint === 'green' ? '#00ff00' : '#ff0000'
+  octx.fillRect(0, 0, off.width, off.height)
+
+  ctx.save()
+  ctx.globalAlpha = alpha
+  ctx.globalCompositeOperation = 'source-over'
+  ctx.drawImage(off, 0, 0)
+  ctx.restore()
+}
+
+function clearOnionSkin() {
+  if (!onionCanvas.value) return
+  const ctx = onionCanvas.value.getContext('2d')
+  if (!ctx) return
+  ctx.clearRect(0, 0, projectWidth.value, projectHeight.value)
+}
+
 onMounted(() => {
   if (state.currentFrame?.frameName) joinFrameSession()
   if (!canvas.value || !drawingCanvas.value || !wrapper.value) return
 
-   renderLayer = new Atrament(canvas.value, {
+  renderLayer = new Atrament(canvas.value, {
     width: projectWidth.value,
     height: projectHeight.value,
-    color: color.value
+    color: color.value,
   })
 
   drawLayer = new Atrament(drawingCanvas.value, {
     width: projectWidth.value,
     height: projectHeight.value,
-    color: color.value
+    color: color.value,
   })
 
   recalcCanvasDisplay()
@@ -275,6 +415,12 @@ onUnmounted(() => {
     pngInterval = null
   }
 })
+
+function applyOnionSettings(v: { enabled: boolean; prev: number; next: number; opacity: number }) {
+  onion.value = v
+  if (v.enabled) renderOnionSkin()
+  else clearOnionSkin()
+}
 
 function leaveCanvas() {
   leaveFrameSession()
