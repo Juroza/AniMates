@@ -103,6 +103,7 @@ type clientStateData = {
   clientUser: User | undefined
   currentProject: Project | undefined
   currentFrame: Frame | undefined
+  currentUsers: Map<string, number> | undefined
   onionSettings: onionSettings
 }
 
@@ -111,9 +112,13 @@ const state: clientStateData = reactive({
   clientUser: undefined,
   currentProject: undefined,
   currentFrame: undefined,
+  currentUsers: undefined,
   onionSettings: { ...defaultOnionSettings }
 })
 
+export function setCurrentUsers(userMap: Map<string, number> | undefined) {
+  state.currentUsers = userMap
+}
 export function setCurrentFrame(frame: Frame | undefined) {
   state.currentFrame = frame
 }
@@ -273,7 +278,17 @@ export async function getImageFramebyName(frameNameIn: string | undefined): Prom
   }
 }
 
-// -------------------- WS event handlers to match your old socket.io ones --------------------
+// -------------------- WS event handlers --------------------
+on('project:current-users', (payload: any) => {
+  if (!state.currentProject) return
+  if (payload.projectName !== state.currentProject.name) return
+
+  // Convert plain object to Map
+  const userMap = new Map<string, number>(Object.entries(payload.userMap))
+  console.log(`Current users on project ${state.currentProject.name}:`, userMap)
+  setCurrentUsers(userMap)
+})
+
 on('frameDataRetrieval', (payload: any) => {
   if (!state.currentFrame) return
   if (payload.frameName !== state.currentFrame.frameName) return
@@ -316,13 +331,20 @@ export function setCurrentProject(project: Project | undefined) {
   state.currentProject = project
 }
 
+export function getUsersOnProject() {
+  if (!state.currentProject) return
+  const projectName = state.currentProject.name
+  send('project:get-current-users', { projectName })
+}
+
 export function joinFrameSession() {
   if (!state.currentFrame) return
 
   const frameName = state.currentFrame.frameName
+  const username = state.clientUser?.username
   setCurrentFrameStrokeRecord([])
 
-  send('joinFrame', { frameName })
+  send('joinFrame', { frameName, username })
   send('drawing:get-actions', { frameName })
 }
 

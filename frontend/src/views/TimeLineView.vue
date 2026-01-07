@@ -34,7 +34,14 @@
             >
               [Options]
             </v-btn>
-            <v-btn size="xx-large" variant="text" class="underlined-btn text-none"> [Info] </v-btn>
+            <v-btn
+            size="xx-large"
+            variant="text"
+            class="underlined-btn text-none"
+            @click="showInfoDialog = true"
+            >
+              [Info]
+            </v-btn>
           </div>
         </v-col>
 
@@ -71,6 +78,32 @@
         "
       />
     </v-dialog>
+    <v-dialog max-width="500" v-model="showInfoDialog" content-class="pa-5">
+      <InfoDialog
+        @see-current-users="
+        () => {
+          showCurrentUsersDialog = true
+          showInfoDialog = false
+        }"
+        @help="
+        () => {
+          showHelpDialog = true
+          showInfoDialog = false
+        }"
+        @close="showInfoDialog = false"
+      />
+    </v-dialog>
+    <v-dialog max-width="500" v-model="showCurrentUsersDialog" content-class="pa-5">
+      <CurrentUsersDialog
+        :userMap="userMap"
+        @close="showCurrentUsersDialog = false"
+      />
+    </v-dialog>
+    <v-dialog max-width="500" v-model="showHelpDialog" content-class="pa-5">
+      <HelpDialog
+        @close="showHelpDialog = false"
+      />
+    </v-dialog>
     <v-dialog max-width="500" v-model="showVideoPopup" content-class="pa-5">
       <VideoPopUp @cancel="showVideoPopup = false" :frames="frames" :project="state.currentProject">
       </VideoPopUp>
@@ -87,19 +120,28 @@ import { ref, watch } from 'vue'
 import router from '../router'
 
 import { useSocket, getImageFramebyName, type Frame } from '../stores/socketState'
+import { getUsersOnProject } from '../stores/socketState'
 import { setCurrentFrame } from '../stores/socketState'
 
 import TimeLineSlider from '../components/organisms/TimeLineSlider.vue'
 import FrameOptionsDialog from '../components/molecules/FrameOptionsDialog.vue'
 import ExportControls from '../components/molecules/ExportControls.vue'
 import VideoPopUp from '../components/molecules/VideoPopUp.vue'
+import InfoDialog from '../components/molecules/InfoDialog.vue'
+import CurrentUsersDialog from '../components/molecules/CurrentUsersDialog.vue'
+import HelpDialog from '../components/molecules/HelpDialog.vue'
 const { state } = useSocket()
 const frames = ref<Frame[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const videoURL = ref<string>('')
 const showOptionDialog = ref(false)
+const showInfoDialog = ref(false)
+const showCurrentUsersDialog = ref(false)
+const showHelpDialog = ref(false)
 const showVideoPopup = ref(false)
+const userMap = ref<Map<string, (number|undefined)>>(new Map())
+// const allUsers = ref<string[]>([])
 async function loadFrames() {
   if (!state.currentProject) return
 
@@ -123,10 +165,59 @@ async function loadFrames() {
   }
 }
 
-watch(() => state.currentProject?.name, loadFrames, { immediate: true })
+watch(
+  () => state.currentProject?.name,
+  () => {
+    loadFrames()
+    getUsersOnProject()
+    // getAllUsers()
+  },
+  { immediate: true })
+
+watch(
+  () => state.currentUsers,
+  () => {
+    userMap.value = computeUserMap()
+  },
+  { deep: true }
+)
 
 function onFrameSelected(index: number) {
   setCurrentFrame(frames.value[index])
+}
+
+// async function getAllUsers() {
+//   try {
+//     const response = await axios.post<getAllUsersResponse[]>(BACKEND_ENDPOINT + '/get-all-users')
+//     if (!response.data) {
+//       console.log('rong')
+//     } else {
+//       console.log('right')
+//       allUsers.value.push(...response.data.map((user) => user.username))
+//     }
+
+//   } catch (err) {
+//     console.error(err)
+//   }
+// }
+
+function computeUserMap() {
+  // const onlineUsers = state.currentUsers || new Map()
+  // const allUsersMap: Map<string, number|undefined> = new Map()
+
+  // for (const user of allUsers.value) {
+  //   if (onlineUsers?.has(user)) {
+  //     allUsersMap.set(user, onlineUsers.get(user))
+  //   } else {
+  //     allUsersMap.set(user, undefined)
+  //   }
+  // }
+
+  // userMap.value = allUsersMap
+  // return onlineUsers
+  // Create a new Map to ensure Vue reactivity
+  if (!state.currentUsers) return new Map()
+  return new Map(state.currentUsers)
 }
 </script>
 
