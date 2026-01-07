@@ -57,7 +57,7 @@
         </v-col>
       </v-row>
     </v-footer>
-    <v-dialog max-width="500" v-model="showOptionDialog" content-class="pa-5">
+    <v-dialog max-width="600" v-model="showOptionDialog" content-class="pa-5">
       <FrameOptionsDialog
         :project="state.currentProject"
         :username="state.clientUser?.username"
