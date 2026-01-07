@@ -34,7 +34,14 @@
             >
               [Options]
             </v-btn>
-            <v-btn size="xx-large" variant="text" class="underlined-btn text-none"> [Info] </v-btn>
+            <v-btn
+            size="xx-large"
+            variant="text"
+            class="underlined-btn text-none"
+            @click="showInfoDialog = true"
+            >
+              [Info]
+            </v-btn>
           </div>
         </v-col>
 
@@ -71,6 +78,31 @@
         "
       />
     </v-dialog>
+    <v-dialog max-width="500" v-model="showInfoDialog" content-class="pa-5">
+      <InfoDialog
+        @see-current-users="
+        () => {
+          showCurrentUsersDialog = true
+          showInfoDialog = false
+        }"
+        @help="
+        () => {
+          showHelpDialog = true
+          showInfoDialog = false
+        }"
+        @close="showInfoDialog = false"
+      />
+    </v-dialog>
+    <v-dialog max-width="500" v-model="showCurrentUsersDialog" content-class="pa-5">
+      <CurrentUsersDialog
+        @close="showCurrentUsersDialog = false"
+      />
+    </v-dialog>
+    <v-dialog max-width="500" v-model="showHelpDialog" content-class="pa-5">
+      <HelpDialog
+        @close="showHelpDialog = false"
+      />
+    </v-dialog>
     <v-dialog max-width="500" v-model="showVideoPopup" content-class="pa-5">
       <VideoPopUp @cancel="showVideoPopup = false" :frames="frames" :project="state.currentProject">
       </VideoPopUp>
@@ -93,12 +125,18 @@ import TimeLineSlider from '../components/organisms/TimeLineSlider.vue'
 import FrameOptionsDialog from '../components/molecules/FrameOptionsDialog.vue'
 import ExportControls from '../components/molecules/ExportControls.vue'
 import VideoPopUp from '../components/molecules/VideoPopUp.vue'
+import InfoDialog from '../components/molecules/InfoDialog.vue'
+import CurrentUsersDialog from '../components/molecules/CurrentUsersDialog.vue'
+import HelpDialog from '../components/molecules/HelpDialog.vue'
 const { state } = useSocket()
 const frames = ref<Frame[]>([])
 const loading = ref(false)
 const error = ref<string | null>(null)
 const videoURL = ref<string>('')
 const showOptionDialog = ref(false)
+const showInfoDialog = ref(false)
+const showCurrentUsersDialog = ref(false)
+const showHelpDialog = ref(false)
 const showVideoPopup = ref(false)
 async function loadFrames() {
   if (!state.currentProject) return

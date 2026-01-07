@@ -1,7 +1,7 @@
 <template>
   <div class="drawing-container">
     <v-card class="mx-auto">
-      <v-card-title>Drawing</v-card-title>
+      <v-card-title><b><i>{{ state.currentProject.name }} - Frame {{ state.currentFrame?.frameNumber }}</i></b></v-card-title>
       <v-card-text>
         <div class="side-by-side">
           <div class="toolbar-container-left">
