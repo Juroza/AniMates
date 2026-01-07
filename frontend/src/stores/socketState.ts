@@ -301,9 +301,9 @@ export function setCurrentProject(project: Project | undefined) {
 }
 
 export function joinFrameSession() {
-  const frameName = state.currentFrame?.frameName
-  if (!frameName) return
+  if (!state.currentFrame) return
 
+  const frameName = state.currentFrame.frameName
   setCurrentFrameStrokeRecord([])
 
   send('joinFrame', { frameName })
@@ -315,7 +315,7 @@ export function leaveFrameSession() {
   if (!frameName) return
   setCurrentFrame(undefined)
 
-  send("leaveFrame", { frameName })
+  send('leaveFrame', { frameName })
 }
 
 export function useSocket() {
