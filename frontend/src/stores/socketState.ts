@@ -159,7 +159,7 @@ function emitLocal(event: string, data: any) {
   for (const cb of handlers[event] ?? []) cb(data)
 }
 
-// reconnect settings (similar to your socket.io config)
+// Reconnect settings
 const reconnect = {
   enabled: true,
   delay: 1000,
@@ -222,7 +222,7 @@ function send(event: string, data: any) {
   ws.send(JSON.stringify({ event, data }))
 }
 
-// -------------------- Your existing REST helper (unchanged) --------------------
+// -------------------- REST helper --------------------
 export async function getImageFramebyName(frameNameIn: string | undefined): Promise<Frame> {
   const frameName = frameNameIn ?? 'i-guess-bro.jpg'
   if (!frameNameIn) {
@@ -321,7 +321,7 @@ on('drawing:actions-snapshot', (payload: any) => {
   patchCurrentFrame({ frameNumber: payload.frameNumber })
 })
 
-// -------------------- exposed API (like your composable) --------------------
+// -------------------- exposed API --------------------
 export function setClientUser(user: User) {
   if (state.clientUser) Object.assign(state.clientUser, user)
   else state.clientUser = user
@@ -362,7 +362,7 @@ export function useSocket() {
 
     // keep the same surface area as before
     socket: {
-      // compat layer for your existing calls in components:
+      // compat layer for existing calls in components:
       emit: (event: string, data?: any) => send(event, data),
       on: (event: string, cb: Handler) => on(event, cb),
       off: (event: string, cb: Handler) => off(event, cb),

@@ -41,7 +41,7 @@ function select() {
   emit('selected', props.frame)
 }
 import { computed } from 'vue'
-//Style from guy on stackoverflow and genai
+
 const shadowStyle = computed(() => {
   const r = props.rotation
   const clamped = Math.max(-60, Math.min(60, r))
@@ -103,7 +103,7 @@ Retrieved 2025-12-31, License - CC BY-SA 3.0
 
 <!--
 
-old incase you want to revert it 
+old incase you want to revert it
 
 <template>
   <v-container class="thumb" :style="{ transform: `rotateY(${props.rotation}deg)` }">
@@ -147,7 +147,7 @@ function select() {
   emit('selected', props.frame)
 }
 import { computed } from 'vue'
-//Style from guy on stackoverflow and genai
+
 const shadowStyle = computed(() => {
   const r = props.rotation
 
