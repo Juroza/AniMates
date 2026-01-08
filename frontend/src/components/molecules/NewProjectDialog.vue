@@ -2,7 +2,7 @@
   <v-card :title="props.project ? 'Edit Project' : 'Create Project'" class="pa-6">
     <v-label class="pa-2">Owner: {{ props.owner?.username }}</v-label>
     <v-text-field label="Project Name" v-model="projectName"
-    :error="hasProject"
+    :error="!hasProject"
     :errorMessages="'This project already exists!'"
     ></v-text-field>
     <v-switch color="primary" v-model="projectPrivate" label="Private Access"></v-switch>
