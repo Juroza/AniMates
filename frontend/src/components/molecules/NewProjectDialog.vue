@@ -64,7 +64,7 @@ const projectPrivate = ref(true)
 const projectWidth = ref(1980)
 const projectHeight = ref(1080)
 const projectFPS = ref(10)
-var hasProject = false;
+var hasProject = ref(false);
 import { watch } from 'vue'
 
 watch(
@@ -109,11 +109,11 @@ async function submitProject() {
       if (!response.data.result) {
         error.value = true
         console.log('rong')
-        hasProject = true
+        hasProject.value = true
       } else {
         error.value = false
         console.log('right')
-        hasProject = false
+        hasProject.value = false
         const getUsersresponse = await axios.post<getUsersProjectsResponse>(
           BACKEND_ENDPOINT + '/get-users-project',
           {
