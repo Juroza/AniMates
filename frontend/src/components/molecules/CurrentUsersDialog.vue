@@ -1,6 +1,7 @@
 <template>
-  <v-card :title="`Active Users`" class="pa-6">
-    <v-divider :thickness="4"></v-divider>
+  <v-card class="pa-6">
+    <h2>Active Users</h2>
+    <v-divider :thickness="5"></v-divider>
     <v-list v-if="props.userMap.size > 0">
       <v-list-item
         :color="frameNumber ? `success` : `grey`"
@@ -10,7 +11,7 @@
         :subtitle="frameNumber ? `Frame ${frameNumber}` : 'Offline'"
       ></v-list-item>
     </v-list>
-    <p v-else > No Current Users</p>
+    <p v-else > There are no users currently active</p>
   </v-card>
 </template>
 <script setup lang="ts">

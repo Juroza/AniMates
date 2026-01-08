@@ -1,8 +1,31 @@
 <template>
-  <v-card :title="`Info`" class="pa-6">
-    <v-btn id="currentUsers" @click="seeCurrentUsers">See Current Users</v-btn>
-    <v-btn id="help" @click="help">Help</v-btn>
-    <v-btn id="close" @click="close">Close</v-btn>
+  <v-card class="pa-6">
+    <h2>Info</h2>
+    <v-divider :thickness="5"></v-divider>
+    <br/>
+    <div class="button_holder">
+      <v-btn class="button"
+        id="currentUsers"
+        variant="tonal"
+        @click="seeCurrentUsers"
+      >
+        See Current Users
+      </v-btn>
+      <v-btn class="button"
+        id="help"
+        variant="tonal"
+        @click="help"
+      >
+        Help
+      </v-btn>
+      <v-btn class="button"
+        id="close"
+        variant="tonal"
+        @click="close"
+      >
+        Close
+      </v-btn>
+    </div>
   </v-card>
 </template>
 <script setup lang="ts">
@@ -18,13 +41,13 @@ function close() {
 }
 </script>
 <style lang="css">
-  #currentUsers {
-    align-self: center;
-  }
-  #help {
-    align-self: center;
-  }
-  #close {
-    align-self: center;
-  }
+.button_holder {
+  width: 100%;
+  align-content: right;
+}
+.button {
+  min-width: min-content;
+  width: 100%;
+}
+
 </style>
