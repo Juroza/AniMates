@@ -2,7 +2,7 @@
   <v-card :title="props.project ? 'Edit Project' : 'Create Project'" class="pa-6">
     <v-label class="pa-2">Owner: {{ props.owner?.username }}</v-label>
     <v-text-field label="Project Name" v-model="projectName"
-    :error="error"
+    :error="hasProject"
     :errorMessages="'This project already exists!'"
     ></v-text-field>
     <v-switch color="primary" v-model="projectPrivate" label="Private Access"></v-switch>
@@ -64,6 +64,7 @@ const projectPrivate = ref(true)
 const projectWidth = ref(1980)
 const projectHeight = ref(1080)
 const projectFPS = ref(10)
+var hasProject = false;
 import { watch } from 'vue'
 
 watch(
@@ -108,9 +109,11 @@ async function submitProject() {
       if (!response.data.result) {
         error.value = true
         console.log('rong')
+        hasProject = true
       } else {
         error.value = false
         console.log('right')
+        hasProject = false
         const getUsersresponse = await axios.post<getUsersProjectsResponse>(
           BACKEND_ENDPOINT + '/get-users-project',
           {
